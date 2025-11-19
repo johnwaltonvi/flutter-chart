@@ -1,3 +1,4 @@
+import 'package:deriv_chart/src/deriv_chart/chart/helpers/functions/helper_functions.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/helpers/paint_functions/paint_text.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/y_axis/y_grid_label_painter.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +29,7 @@ class YGridLabelPainterWeb extends YGridLabelPainter {
 
       paintText(
         canvas,
-        text: quote.toStringAsFixed(pipSize),
+        text: formatQuote(quote, pipSize),
         style: textStyle,
         anchor: Offset(size.width - style.labelHorizontalPadding, y),
         anchorAlignment: Alignment.centerRight,

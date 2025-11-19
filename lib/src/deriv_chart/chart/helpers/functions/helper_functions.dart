@@ -4,6 +4,19 @@ import 'package:deriv_chart/deriv_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+final Map<int, NumberFormat> _quoteFormatters = <int, NumberFormat>{};
+
+String formatQuote(double value, int pipSize) {
+  final NumberFormat formatter = _quoteFormatters.putIfAbsent(
+    pipSize,
+    () => NumberFormat.decimalPattern()
+      ..minimumFractionDigits = pipSize
+      ..maximumFractionDigits = pipSize,
+  );
+
+  return formatter.format(value);
+}
+
 /// Returns a safe minimum with considering each value other than `double.nan`.
 double safeMin(double a, double b) {
   final List<double> compareValues = _checkNan(a, b);
@@ -58,8 +71,9 @@ Color calculateTextColor(Color background) =>
     background.computeLuminance() >= 0.5 ? Colors.black : Colors.white;
 
 /// Returns the width of the label with the given text,
-double labelWidth(double text, TextStyle style, int pipSize) => makeTextPainter(
-      text.toStringAsFixed(pipSize),
+double labelWidth(double text, TextStyle style, int pipSize) =>
+    makeTextPainter(
+      formatQuote(text, pipSize),
       style,
     ).width;
 
