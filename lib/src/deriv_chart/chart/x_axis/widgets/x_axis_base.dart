@@ -185,6 +185,21 @@ class XAxisState extends State<XAxisBase> with TickerProviderStateMixin {
             return Stack(
               fit: StackFit.expand,
               children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: _chartTheme.gridStyle.xLabelsAreaHeight,
+                  ),
+                  child: widget.child,
+                ),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Container(
+                    width:
+                        widget.entries.isNotEmpty ? yAxisLabelsAreaWidth : 100,
+                    height: _chartTheme.gridStyle.xLabelsAreaHeight,
+                    color: _chartTheme.backgroundColor,
+                  ),
+                ),
                 if (context.read<ChartConfig>().chartAxisConfig.showEpochGrid)
                   RepaintBoundary(
                     child: CustomPaint(
@@ -202,21 +217,6 @@ class XAxisState extends State<XAxisBase> with TickerProviderStateMixin {
                       ),
                     ),
                   ),
-                Padding(
-                  padding: EdgeInsets.only(
-                    bottom: _chartTheme.gridStyle.xLabelsAreaHeight,
-                  ),
-                  child: widget.child,
-                ),
-                Align(
-                    alignment: Alignment.bottomRight,
-                    child: Container(
-                      width: widget.entries.isNotEmpty
-                          ? yAxisLabelsAreaWidth
-                          : 100,
-                      height: _chartTheme.gridStyle.xLabelsAreaHeight,
-                      color: _chartTheme.backgroundColor,
-                    ))
               ],
             );
           },
