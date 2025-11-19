@@ -11,6 +11,7 @@ import 'package:deriv_chart/src/deriv_chart/chart/helpers/paint_functions/paint_
 import 'package:deriv_chart/src/deriv_chart/chart/y_axis/y_axis_config.dart';
 import 'package:deriv_chart/src/theme/painting_styles/barrier_style.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'horizontal_barrier.dart';
 import 'tick_indicator.dart';
@@ -22,6 +23,7 @@ class HorizontalBarrierPainter<T extends HorizontalBarrier>
   HorizontalBarrierPainter(T series) : super(series);
 
   late Paint _paint;
+  static final Map<int, NumberFormat> _priceFormats = {};
 
   /// Right margin.
   static const double rightMargin = 4;
@@ -118,7 +120,7 @@ class HorizontalBarrierPainter<T extends HorizontalBarrier>
     }
 
     final TextPainter valuePainter = makeTextPainter(
-      animatedValue.toStringAsFixed(chartConfig.pipSize),
+      _formatPrice(animatedValue, chartConfig.pipSize),
       style.textStyle,
     );
     final Rect labelArea = Rect.fromCenter(
@@ -331,6 +333,16 @@ class HorizontalBarrierPainter<T extends HorizontalBarrier>
           ),
           arrowPaint..color = _paint.color.withOpacity(0.32));
   }
+
+  String _formatPrice(double value, int pipSize) {
+    final formatter = _priceFormats.putIfAbsent(
+      pipSize,
+      () => NumberFormat.decimalPattern()
+        ..minimumFractionDigits = pipSize
+        ..maximumFractionDigits = pipSize,
+    );
+    return formatter.format(value);
+  }
 }
 
 /// The painter for the [IconTickIndicator] which paints the icon on the
@@ -378,7 +390,7 @@ class IconBarrierPainter extends HorizontalBarrierPainter<IconTickIndicator> {
         Paint()..color = Colors.black.withOpacity(0.32),
       );
 
-    TextPainter(textDirection: TextDirection.ltr)
+    TextPainter(textDirection: ui.TextDirection.ltr)
       ..text = TextSpan(
         text: String.fromCharCode(icon.icon!.codePoint),
         style: TextStyle(

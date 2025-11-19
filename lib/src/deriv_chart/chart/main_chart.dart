@@ -425,14 +425,14 @@ class _ChartImplementationState extends BasicChartState<MainChart> {
                 if (widget.drawingTools != null && widget.useDrawingToolsV2)
                   _buildInteractiveLayer(context, xAxis)
                 else if (widget.drawingTools != null)
-                  _buildDrawingToolChart(widget.drawingTools!),
-                if (widget.showScrollToLastTickButton &&
-                    _isScrollToLastTickAvailable)
-                  Positioned(
-                    bottom: 0,
-                    right: quoteLabelsTouchAreaWidth,
-                    child: _buildScrollToLastTickButton(),
-                  ),
+                _buildDrawingToolChart(widget.drawingTools!),
+              if (widget.showScrollToLastTickButton &&
+                  _isScrollToLastTickAvailable)
+                Positioned(
+                  bottom: 0,
+                  right: quoteLabelsTouchAreaWidth + 20,
+                  child: _buildScrollToLastTickButton(),
+                ),
                 if (widget.showDataFitButton &&
                     (widget._mainSeries.entries?.isNotEmpty ?? false))
                   Positioned(
