@@ -46,6 +46,7 @@ class Chart extends StatefulWidget {
     required this.mainSeries,
     required this.granularity,
     required this.crosshairVariant,
+    this.timeFormat = TimeFormat.twentyFourHour,
     this.interactiveLayerBehaviour,
     this.drawingTools,
     this.pipSize = 4,
@@ -111,6 +112,9 @@ class Chart extends StatefulWidget {
   /// For candles: Duration of one candle in ms.
   /// For ticks: Average ms difference between two consecutive ticks.
   final int granularity;
+
+  /// Preferred time format for axis labels and crosshair.
+  final TimeFormat timeFormat;
 
   /// Called when crosshair details appear after long press.
   final VoidCallback? onCrosshairAppeared;
@@ -280,6 +284,7 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
       pipSize: widget.pipSize,
       granularity: widget.granularity,
       chartAxisConfig: widget.chartAxisConfig,
+      timeFormat: widget.timeFormat,
     );
     // Calculate default msPerPx based on granularity and default interval width (which defaults to 20 pixels), msPerPx could be null in situations like when data fit mode is enabled.
     final double defaultMsPerPx =

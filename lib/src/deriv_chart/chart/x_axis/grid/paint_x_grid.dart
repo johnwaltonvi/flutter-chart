@@ -4,6 +4,7 @@ import 'package:deriv_chart/src/deriv_chart/chart/x_axis/grid/time_label.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/y_axis/y_axis_config.dart';
 import 'package:deriv_chart/src/theme/chart_theme.dart';
 import 'package:deriv_chart/src/theme/painting_styles/grid_style.dart';
+import 'package:deriv_chart/src/models/chart_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -15,6 +16,7 @@ void paintXGrid(
   required ChartTheme style,
   required List<DateTime> timestamps,
   required double msPerPx,
+  required TimeFormat timeFormat,
 }) {
   assert(timestamps.length == xCoords.length);
   final GridStyle gridStyle = style.gridStyle;
@@ -36,6 +38,7 @@ void paintXGrid(
       xCoords: xCoords,
       gridStyle: gridStyle,
       timestamps: timestamps,
+      timeFormat: timeFormat,
     );
   } else {
     _paintTimeLabels(
@@ -44,6 +47,7 @@ void paintXGrid(
       xCoords: xCoords,
       gridStyle: gridStyle,
       timestamps: timestamps,
+      timeFormat: timeFormat,
     );
   }
 }
@@ -80,11 +84,12 @@ void _paintTimeLabels(
   required List<double> xCoords,
   required GridStyle gridStyle,
   required List<DateTime> timestamps,
+  required TimeFormat timeFormat,
 }) {
   for (int index = 0; index < timestamps.length; index++) {
     paintText(
       canvas,
-      text: timeLabel(timestamps[index]),
+      text: timeLabel(timestamps[index], timeFormat),
       anchor: Offset(
         xCoords[index],
         size.height - gridStyle.xLabelsAreaHeight / 2,
@@ -100,6 +105,7 @@ void _paintTimeLabelsWeb(
   required List<double> xCoords,
   required GridStyle gridStyle,
   required List<DateTime> timestamps,
+  required TimeFormat timeFormat,
 }) {
   final TextStyle textStyle = TextStyle(
     fontSize: gridStyle.xLabelStyle.fontSize,
@@ -110,7 +116,7 @@ void _paintTimeLabelsWeb(
   for (int index = 0; index < timestamps.length; index++) {
     paintText(
       canvas,
-      text: timeLabel(timestamps[index]),
+      text: timeLabel(timestamps[index], timeFormat),
       anchor: Offset(
         xCoords[index],
         size.height - gridStyle.xLabelsAreaHeight / 2,

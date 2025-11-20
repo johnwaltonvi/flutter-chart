@@ -1,25 +1,40 @@
 import 'package:deriv_chart/src/deriv_chart/chart/x_axis/functions/calc_no_overlay_time_gaps.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/x_axis/grid/time_label.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:deriv_chart/src/models/chart_config.dart';
 import 'package:deriv_chart/src/models/time_range.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('start of day -> date in format `2 Jul`', () {
     expect(
-      timeLabel(DateTime.parse('2020-07-02 00:00:00Z')),
+      timeLabel(DateTime.parse('2020-07-02 00:00:00Z'), TimeFormat.twentyFourHour),
       '2 Jul',
     );
   });
   test('start of the month -> full month name', () {
     expect(
-      timeLabel(DateTime.parse('2020-07-01 00:00:00Z')),
+      timeLabel(DateTime.parse('2020-07-01 00:00:00Z'), TimeFormat.twentyFourHour),
       'July',
     );
   });
   test('start of the year -> year', () {
     expect(
-      timeLabel(DateTime.parse('2020-01-01 00:00:00Z')),
+      timeLabel(DateTime.parse('2020-01-01 00:00:00Z'), TimeFormat.twentyFourHour),
       '2020',
+    );
+  });
+
+  test('formats intraday label with 12-hour clock', () {
+    expect(
+      timeLabel(DateTime.parse('2020-01-01 16:45:00Z'), TimeFormat.twelveHour),
+      '4 PM',
+    );
+  });
+
+  test('formats intraday label with 24-hour clock', () {
+    expect(
+      timeLabel(DateTime.parse('2020-01-01 16:45:00Z'), TimeFormat.twentyFourHour),
+      '16',
     );
   });
 

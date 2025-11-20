@@ -37,6 +37,7 @@ class DerivChart extends StatefulWidget {
     required this.mainSeries,
     required this.granularity,
     required this.activeSymbol,
+    this.timeFormat = TimeFormat.twentyFourHour,
     this.markerSeries,
     this.controller,
     this.onCrosshairAppeared,
@@ -94,6 +95,9 @@ class DerivChart extends StatefulWidget {
   /// For candles: Duration of one candle in ms.
   /// For ticks: Average ms difference between two consecutive ticks.
   final int granularity;
+
+  /// Preferred time format for x-axis and crosshair labels.
+  final TimeFormat timeFormat;
 
   /// Called when crosshair details appear after long press.
   final VoidCallback? onCrosshairAppeared;
@@ -363,6 +367,7 @@ class _DerivChartState extends State<DerivChart> {
                 mainSeries: widget.mainSeries,
                 pipSize: widget.pipSize,
                 granularity: widget.granularity,
+                timeFormat: widget.timeFormat,
                 controller: widget.controller,
                 overlayConfigs: <IndicatorConfig>[
                   ...context

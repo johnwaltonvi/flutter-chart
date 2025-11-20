@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:deriv_chart/src/models/chart_config.dart';
 
 /// A utility class that provides methods for formatting dates and times in chart components.
 ///
@@ -99,10 +100,50 @@ class ChartDateUtils {
   /// Note: This method uses the 24-hour time format (HH) rather than 12-hour (hh)
   /// to avoid ambiguity in chart displays. It's particularly useful for intraday
   /// trading charts where precise time information is important.
-  static String formatTimeWithSeconds(int timestamp, {bool isUtc = true}) {
+  static String formatTimeWithSeconds(
+    int timestamp, {
+    bool isUtc = true,
+    TimeFormat timeFormat = TimeFormat.twentyFourHour,
+  }) {
+    return formatTime(
+      timestamp,
+      isUtc: isUtc,
+      timeFormat: timeFormat,
+      showMinutes: true,
+      showSeconds: true,
+    );
+  }
+
+  /// Formats a timestamp to a time string with configurable precision.
+  static String formatTime(
+    int timestamp, {
+    bool isUtc = true,
+    TimeFormat timeFormat = TimeFormat.twentyFourHour,
+    bool showMinutes = true,
+    bool showSeconds = true,
+  }) {
     final DateTime time =
         DateTime.fromMillisecondsSinceEpoch(timestamp, isUtc: isUtc);
-    return DateFormat('HH:mm:ss').format(time);
+    final pattern = _timePattern(
+      timeFormat: timeFormat,
+      showMinutes: showMinutes,
+      showSeconds: showSeconds,
+    );
+    return DateFormat(pattern).format(time);
+  }
+
+  static String _timePattern({
+    required TimeFormat timeFormat,
+    required bool showMinutes,
+    required bool showSeconds,
+  }) {
+    final String minutePart = showMinutes ? ':mm' : '';
+    final String secondPart = showSeconds ? ':ss' : '';
+    if (timeFormat == TimeFormat.twentyFourHour) {
+      return 'HH$minutePart$secondPart';
+    }
+    final suffix = showMinutes || showSeconds ? ' a' : 'a';
+    return 'h$minutePart$secondPart$suffix';
   }
 
   /// Formats a timestamp to a compact date and time string.

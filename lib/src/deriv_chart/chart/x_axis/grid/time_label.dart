@@ -1,7 +1,8 @@
+import 'package:deriv_chart/src/models/chart_config.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
 /// Returns the time label for the given [time].
-String timeLabel(DateTime time) {
+String timeLabel(DateTime time, TimeFormat format) {
   final bool is0h0m0s = time.hour == 0 && time.minute == 0 && time.second == 0;
   if (time.month == 1 && time.day == 1 && is0h0m0s) {
     return DateFormat('y').format(time);
@@ -12,5 +13,8 @@ String timeLabel(DateTime time) {
   if (is0h0m0s) {
     return DateFormat('d MMM').format(time);
   }
-  return DateFormat('Hms').format(time);
+  if (format == TimeFormat.twentyFourHour) {
+    return DateFormat('HH').format(time);
+  }
+  return DateFormat('h a').format(time);
 }

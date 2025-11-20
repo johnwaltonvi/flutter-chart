@@ -5,6 +5,7 @@ import 'package:deriv_chart/src/deriv_chart/interactive_layer/crosshair/find.dar
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/chart_series/data_series.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/helpers/chart_date_utils.dart';
 import 'package:deriv_chart/src/models/tick.dart';
+import 'package:deriv_chart/src/models/chart_config.dart';
 import 'package:deriv_chart/src/theme/chart_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -78,8 +79,13 @@ class CrosshairDetails extends StatelessWidget {
   Widget _buildTimeLabel(
       BuildContext context, CrosshairVariant crosshairVariant) {
     final String date = ChartDateUtils.formatDate(crosshairTick.epoch);
-    final String time =
-        ChartDateUtils.formatTimeWithSeconds(crosshairTick.epoch);
+    final timeFormat = context.watch<ChartConfig>().timeFormat;
+    final String time = ChartDateUtils.formatTime(
+      crosshairTick.epoch,
+      timeFormat: timeFormat,
+      showMinutes: false,
+      showSeconds: false,
+    );
     final ChartTheme theme = context.watch<ChartTheme>();
     final style = theme.crosshairInformationBoxTimeLabelStyle.copyWith(
       color: theme.crosshairInformationBoxTextSubtle,
