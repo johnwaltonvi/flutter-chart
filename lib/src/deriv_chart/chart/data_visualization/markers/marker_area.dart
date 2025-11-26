@@ -131,7 +131,7 @@ class _MarkerAreaState extends State<MarkerArea> {
               child: Container(),
               painter: _MarkerPainter(
                 series: widget.markerSeries,
-                epochToX: xAxis.xFromEpochSnapped,
+                epochToX: xAxis.xFromEpoch,
                 quoteToY: widget.quoteToCanvasY,
                 theme: context.watch<ChartTheme>(),
                 chartScaleModel: context.watch<ChartScaleModel>(),
