@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:deriv_chart/src/theme/painting_styles/data_series_style.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 
 /// Defines the style of painting candle data.
 class CandleStyle extends DataSeriesStyle with EquatableMixin {
@@ -12,6 +13,8 @@ class CandleStyle extends DataSeriesStyle with EquatableMixin {
     this.neutralColor = const Color(0xFF6E6E6E),
     this.candleBullishWickColor = const Color(0xFF00C390),
     this.candleBearishWickColor = const Color(0xFFDE0040),
+    this.candleBullishBodyGradient,
+    this.candleBearishBodyGradient,
   });
 
   /// Color of candles in which the price moved HIGHER during their period.
@@ -30,16 +33,24 @@ class CandleStyle extends DataSeriesStyle with EquatableMixin {
   /// Color of wicks in which the price moved LOWER during their period.
   final Color candleBearishWickColor;
 
-  @override
-  String toString() =>
-      '${super.toString()}$candleBullishBodyColor, $candleBearishBodyColor, $neutralColor, $candleBullishWickColor, $candleBearishWickColor';
+  /// Optional gradient used to paint bullish candle bodies.
+  final LinearGradient? candleBullishBodyGradient;
+
+  /// Optional gradient used to paint bearish candle bodies.
+  final LinearGradient? candleBearishBodyGradient;
 
   @override
-  List<Object> get props => <Object>[
+  String toString() =>
+      '${super.toString()}$candleBullishBodyColor, $candleBearishBodyColor, $neutralColor, $candleBullishWickColor, $candleBearishWickColor, $candleBullishBodyGradient, $candleBearishBodyGradient';
+
+  @override
+  List<Object?> get props => <Object?>[
         candleBullishBodyColor,
         candleBearishBodyColor,
         neutralColor,
         candleBullishWickColor,
         candleBearishWickColor,
+        candleBullishBodyGradient,
+        candleBearishBodyGradient,
       ];
 }

@@ -33,8 +33,26 @@ class CandlePainter extends OhlcPainter {
           : style.candleBearishWickColor
       ..strokeWidth = 1.2;
 
-    _candleBullishColorPaint = Paint()..color = style.candleBullishBodyColor;
-    _candleBearishColorPaint = Paint()..color = style.candleBearishBodyColor;
+    final Rect candleRect = isBullishCandle
+        ? Rect.fromLTRB(
+            currentPainting.xCenter - currentPainting.width / 2,
+            currentPainting.yClose,
+            currentPainting.xCenter + currentPainting.width / 2,
+            currentPainting.yOpen,
+          )
+        : Rect.fromLTRB(
+            currentPainting.xCenter - currentPainting.width / 2,
+            currentPainting.yOpen,
+            currentPainting.xCenter + currentPainting.width / 2,
+            currentPainting.yClose,
+          );
+
+    _candleBullishColorPaint = Paint()
+      ..color = style.candleBullishBodyColor
+      ..shader = style.candleBullishBodyGradient?.createShader(candleRect);
+    _candleBearishColorPaint = Paint()
+      ..color = style.candleBearishBodyColor
+      ..shader = style.candleBearishBodyGradient?.createShader(candleRect);
 
     canvas.drawLine(
       Offset(currentPainting.xCenter, currentPainting.yHigh),
@@ -51,25 +69,9 @@ class CandlePainter extends OhlcPainter {
         _linePaint,
       );
     } else if (isBullishCandle) {
-      canvas.drawRect(
-        Rect.fromLTRB(
-          currentPainting.xCenter - currentPainting.width / 2,
-          currentPainting.yClose,
-          currentPainting.xCenter + currentPainting.width / 2,
-          currentPainting.yOpen,
-        ),
-        _candleBullishColorPaint,
-      );
+      canvas.drawRect(candleRect, _candleBullishColorPaint);
     } else {
-      canvas.drawRect(
-        Rect.fromLTRB(
-          currentPainting.xCenter - currentPainting.width / 2,
-          currentPainting.yOpen,
-          currentPainting.xCenter + currentPainting.width / 2,
-          currentPainting.yClose,
-        ),
-        _candleBearishColorPaint,
-      );
+      canvas.drawRect(candleRect, _candleBearishColorPaint);
     }
   }
 }
