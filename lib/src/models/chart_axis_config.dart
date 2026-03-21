@@ -23,6 +23,7 @@ class ChartAxisConfig {
     this.showEpochGrid = true,
     this.showFrame = false,
     this.smoothScrolling = true,
+    this.panMomentumEnabled = true,
   });
 
   /// Top quote bound target for animated transition.
@@ -60,16 +61,23 @@ class ChartAxisConfig {
   /// Default is `true`.
   final bool smoothScrolling;
 
+  /// Whether horizontal pan gestures should continue gliding after release.
+  ///
+  /// When `false`, the chart stops immediately when the user releases a drag.
+  final bool panMomentumEnabled;
+
   /// Creates a copy of this ChartAxisConfig but with the given fields replaced.
   ChartAxisConfig copyWith({
     double? initialTopBoundQuote,
     double? initialBottomBoundQuote,
     double? maxCurrentTickOffset,
+    bool? panMomentumEnabled,
   }) =>
       ChartAxisConfig(
         initialTopBoundQuote: initialTopBoundQuote ?? this.initialTopBoundQuote,
         initialBottomBoundQuote:
             initialBottomBoundQuote ?? this.initialBottomBoundQuote,
         maxCurrentTickOffset: maxCurrentTickOffset ?? this.maxCurrentTickOffset,
+        panMomentumEnabled: panMomentumEnabled ?? this.panMomentumEnabled,
       );
 }

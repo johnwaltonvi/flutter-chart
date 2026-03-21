@@ -56,6 +56,7 @@ class XAxisModel extends ChangeNotifier {
     required AnimationController animationController,
     required bool isLive,
     required bool snapMarkersToIntervals,
+    required bool panMomentumEnabled,
     required double maxCurrentTickOffset,
     this.defaultIntervalWidth = 20,
     bool startWithDataFitMode = false,
@@ -85,6 +86,7 @@ class XAxisModel extends ChangeNotifier {
     _msPerPx = msPerPx ?? _defaultMsPerPx;
     _isLive = isLive;
     _maxCurrentTickOffset = maxCurrentTickOffset;
+    _panMomentumEnabled = panMomentumEnabled;
     _rightBoundEpoch = _maxRightBoundEpoch;
     _dataFitMode = startWithDataFitMode;
     _minIntervalWidth = minIntervalWidth ?? 1;
@@ -159,6 +161,7 @@ class XAxisModel extends ChangeNotifier {
   double? _prevMsPerPx;
   late int _granularity;
   late bool _snapMarkersToIntervals;
+  late bool _panMomentumEnabled;
   late bool _isScrollBlocked = false;
   late int _nowEpoch;
   late int _rightBoundEpoch;
@@ -486,7 +489,7 @@ class XAxisModel extends ChangeNotifier {
 
   /// Called at the end of scale and pan gestures.
   void onScaleAndPanEnd(ScaleEndDetails details) {
-    if (!_isScrollBlocked) {
+    if (!_isScrollBlocked && _panMomentumEnabled) {
       _triggerScrollMomentum(details.velocity);
     }
   }
@@ -581,6 +584,7 @@ class XAxisModel extends ChangeNotifier {
     EdgeInsets? dataFitPadding,
     double? maxCurrentTickOffset,
     bool? snapMarkersToIntervals,
+    bool? panMomentumEnabled,
   }) {
     _updateIsLive(isLive);
     _updateGranularity(granularity);
@@ -591,6 +595,7 @@ class XAxisModel extends ChangeNotifier {
     _dataFitPadding = dataFitPadding ?? _dataFitPadding;
     _maxCurrentTickOffset = maxCurrentTickOffset ?? _maxCurrentTickOffset;
     _snapMarkersToIntervals = snapMarkersToIntervals ?? _snapMarkersToIntervals;
+    _panMomentumEnabled = panMomentumEnabled ?? _panMomentumEnabled;
   }
 
   /// Returns a list of timestamps in the grid without any overlaps.
