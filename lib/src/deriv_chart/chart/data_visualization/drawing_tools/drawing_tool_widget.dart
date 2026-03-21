@@ -4,13 +4,16 @@ import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_too
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/data_model/drawing_parts.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/data_model/edge_point.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/drawing.dart';
+import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/fib_retracement/fib_retracement_drawing_creator.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/horizontal/horizontal_drawing_creator.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/fibfan/fibfan_drawing_creator.dart';
+import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/horizontal_ray/horizontal_ray_drawing_creator.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/line/line_drawing.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/line/line_drawing_mobile.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/line/line_drawing_creator.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/rectangle/rectangle_drawing_creator.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/ray/ray_drawing_creator.dart';
+import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/text/text_drawing_creator.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/trend/trend_drawing_creator.dart';
 
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/vertical/vertical_drawing_creator.dart';
@@ -97,11 +100,25 @@ class DrawingToolWidget extends StatelessWidget {
           clearDrawingToolSelection: clearDrawingToolSelection,
           removeUnfinishedDrawing: removeUnfinishedDrawing,
         );
+      case 'dt_fib_retracement':
+        return FibRetracementDrawingCreator(
+          onAddDrawing: onAddDrawing,
+          quoteFromCanvasY: quoteFromCanvasY,
+          clearDrawingToolSelection: clearDrawingToolSelection,
+          removeUnfinishedDrawing: removeUnfinishedDrawing,
+        );
       case 'dt_horizontal':
         return HorizontalDrawingCreator(
           onAddDrawing: onAddDrawing,
           quoteFromCanvasY: quoteFromCanvasY,
           chartConfig: chartConfig,
+        );
+      case 'dt_horizontal_ray':
+        return HorizontalRayDrawingCreator(
+          onAddDrawing: onAddDrawing,
+          quoteFromCanvasY: quoteFromCanvasY,
+          clearDrawingToolSelection: clearDrawingToolSelection,
+          removeUnfinishedDrawing: removeUnfinishedDrawing,
         );
       case 'dt_line':
         return LineDrawingCreator(
@@ -156,6 +173,11 @@ class DrawingToolWidget extends StatelessWidget {
           quoteFromCanvasY: quoteFromCanvasY,
           clearDrawingToolSelection: clearDrawingToolSelection,
           removeUnfinishedDrawing: removeUnfinishedDrawing,
+        );
+      case 'dt_text':
+        return TextDrawingCreator(
+          onAddDrawing: onAddDrawing,
+          quoteFromCanvasY: quoteFromCanvasY,
         );
       case 'dt_trend':
         return TrendDrawingCreator(

@@ -35,8 +35,12 @@ abstract class DrawingToolConfig extends AddOnConfig {
         return ContinuousDrawingToolConfig.fromJson(json);
       case FibfanDrawingToolConfig.name:
         return FibfanDrawingToolConfig.fromJson(json);
+      case FibRetracementDrawingToolConfig.name:
+        return FibRetracementDrawingToolConfig.fromJson(json);
       case HorizontalDrawingToolConfig.name:
         return HorizontalDrawingToolConfig.fromJson(json);
+      case HorizontalRayDrawingToolConfig.name:
+        return HorizontalRayDrawingToolConfig.fromJson(json);
       case LineDrawingToolConfig.name:
         return LineDrawingToolConfig.fromJson(json);
       case LineDrawingToolConfigMobile.name:
@@ -45,6 +49,8 @@ abstract class DrawingToolConfig extends AddOnConfig {
         return RayDrawingToolConfig.fromJson(json);
       case RectangleDrawingToolConfig.name:
         return RectangleDrawingToolConfig.fromJson(json);
+      case TextDrawingToolConfig.name:
+        return TextDrawingToolConfig.fromJson(json);
       case TrendDrawingToolConfig.name:
         return TrendDrawingToolConfig.fromJson(json);
       case VerticalDrawingToolConfig.name:
