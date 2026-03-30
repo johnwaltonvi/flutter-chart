@@ -12,6 +12,21 @@ import 'marker.dart';
 import 'marker_icon_painters/marker_icon_painter.dart';
 import 'marker_painter.dart';
 
+/// Marker series that can expand chart quote bounds based on visual extents.
+abstract class MarkerQuoteBoundsContributor {
+  /// Returns the quote bounds required to fully display markers for the
+  /// current chart frame. Values may be `double.nan` when no expansion
+  /// is needed on that side.
+  List<double> getMarkerQuoteBounds({
+    required double minQuote,
+    required double maxQuote,
+    required double canvasHeight,
+    required double topPadding,
+    required double bottomPadding,
+    required EpochToX epochToX,
+  });
+}
+
 /// Marker series
 class MarkerSeries extends Series {
   /// Initializes.

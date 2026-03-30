@@ -389,6 +389,7 @@ class _ChartImplementationState extends BasicChartState<MainChart> {
     for (final ChartData data in widget.chartDataList) {
       data.update(xAxis.leftBoundEpoch, xAxis.rightBoundEpoch);
     }
+    widget.markerSeries?.update(xAxis.leftBoundEpoch, xAxis.rightBoundEpoch);
   }
 
   @override
@@ -425,14 +426,14 @@ class _ChartImplementationState extends BasicChartState<MainChart> {
                 if (widget.drawingTools != null && widget.useDrawingToolsV2)
                   _buildInteractiveLayer(context, xAxis)
                 else if (widget.drawingTools != null)
-                _buildDrawingToolChart(widget.drawingTools!),
-              if (widget.showScrollToLastTickButton &&
-                  _isScrollToLastTickAvailable)
-                Positioned(
-                  bottom: 0,
-                  right: quoteLabelsTouchAreaWidth + 20,
-                  child: _buildScrollToLastTickButton(),
-                ),
+                  _buildDrawingToolChart(widget.drawingTools!),
+                if (widget.showScrollToLastTickButton &&
+                    _isScrollToLastTickAvailable)
+                  Positioned(
+                    bottom: 0,
+                    right: quoteLabelsTouchAreaWidth + 20,
+                    child: _buildScrollToLastTickButton(),
+                  ),
                 if (widget.showDataFitButton &&
                     (widget._mainSeries.entries?.isNotEmpty ?? false))
                   Positioned(
@@ -609,6 +610,36 @@ class _ChartImplementationState extends BasicChartState<MainChart> {
 
     minQuote = safeMin(minQuote, widget.chartDataList.getMinValue());
     maxQuote = safeMax(maxQuote, widget.chartDataList.getMaxValue());
+
+    final MarkerSeries? markerSeries = widget.markerSeries;
+    if (markerSeries != null) {
+      minQuote = safeMin(minQuote, markerSeries.minValue);
+      maxQuote = safeMax(maxQuote, markerSeries.maxValue);
+      if (canvasSize != null && markerSeries is MarkerQuoteBoundsContributor) {
+        final MarkerQuoteBoundsContributor markerBoundsContributor =
+            markerSeries as MarkerQuoteBoundsContributor;
+        for (var i = 0; i < 3; i++) {
+          final List<double> markerBounds =
+              markerBoundsContributor.getMarkerQuoteBounds(
+            minQuote: minQuote,
+            maxQuote: maxQuote,
+            canvasHeight: canvasSize!.height,
+            topPadding: verticalPadding,
+            bottomPadding: verticalPadding,
+            epochToX: xAxis.xFromEpoch,
+          );
+          final double nextMinQuote = safeMin(minQuote, markerBounds[0]);
+          final double nextMaxQuote = safeMax(maxQuote, markerBounds[1]);
+          if ((nextMinQuote - minQuote).abs() < 1e-9 &&
+              (nextMaxQuote - maxQuote).abs() < 1e-9) {
+            break;
+          }
+          minQuote = nextMinQuote;
+          maxQuote = nextMaxQuote;
+        }
+      }
+    }
+
     return <double>[minQuote, maxQuote];
   }
 }
