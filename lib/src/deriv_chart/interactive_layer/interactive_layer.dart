@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:deriv_chart/src/add_ons/drawing_tools_ui/drawing_tool_config.dart';
 import 'package:deriv_chart/src/add_ons/repository.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/multiple_animated_builder.dart';
+import 'package:deriv_chart/src/deriv_chart/chart/gestures/gesture_manager.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/x_axis/x_axis_model.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/y_axis/y_axis_config.dart';
 import 'package:deriv_chart/src/deriv_chart/interactive_layer/crosshair/crosshair_controller.dart';
@@ -360,6 +361,7 @@ class _InteractiveLayerGestureHandlerState
   late AnimationController _stateChangeController;
   static const Curve _stateChangeCurve = Curves.easeOut;
   final InteractionNotifier _interactionNotifier = InteractionNotifier();
+  late final GestureManagerState _gestureManager;
 
   String? _addedDrawing;
 
@@ -391,6 +393,9 @@ class _InteractiveLayerGestureHandlerState
       vsync: this,
       duration: const Duration(milliseconds: 240),
     );
+
+    _gestureManager = context.read<GestureManagerState>()
+      ..registerCallback(_handleTapUp);
 
     widget.interactiveLayerBehaviour.init(
       interactiveLayer: this,
@@ -504,15 +509,6 @@ class _InteractiveLayerGestureHandlerState
         cursor: _mouseCursor,
         child: RawGestureDetector(
           gestures: <Type, GestureRecognizerFactory>{
-            // Configure tap recognizer
-            TapGestureRecognizer:
-                GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
-              () => TapGestureRecognizer(),
-              (TapGestureRecognizer instance) {
-                instance.onTapUp = _handleTapUp;
-              },
-            ),
-
             // Configure our custom drawing tool gesture recognizer
             DrawingToolGestureRecognizer: GestureRecognizerFactoryWithHandlers<
                 DrawingToolGestureRecognizer>(
@@ -680,6 +676,7 @@ class _InteractiveLayerGestureHandlerState
 
   @override
   void dispose() {
+    _gestureManager.removeCallback(_handleTapUp);
     _interactionNotifier.dispose();
     _stateChangeController.dispose();
     _drawingToolGestureRecognizer.dispose();

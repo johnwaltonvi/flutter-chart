@@ -20,19 +20,32 @@ class FieldWidget extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Row(
-        children: <Widget>[
-          Text(label, style: const TextStyle(fontSize: 10)),
-          const SizedBox(width: 4),
-          SizedBox(
-            width: 20,
-            child: TextFormField(
-              style: const TextStyle(fontSize: 10),
-              initialValue: initialValue,
-              keyboardType: TextInputType.number,
-              onChanged: onValueChanged,
-            ),
-          ),
-        ],
-      );
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    final Widget field = TextFormField(
+      style: theme.textTheme.bodySmall,
+      initialValue: initialValue,
+      keyboardType: TextInputType.number,
+      onChanged: onValueChanged,
+      decoration: InputDecoration(
+        labelText: label.isEmpty ? null : label,
+        border: const OutlineInputBorder(),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (constraints.maxWidth.isFinite) {
+          return field;
+        }
+        return SizedBox(width: 160, child: field);
+      },
+    );
+  }
 }

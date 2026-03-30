@@ -52,17 +52,22 @@ class DrawingTools {
   /// For the scenario where the user adds part of a drawing
   /// and then opens the dialog.
   void init() {
+    if (drawingToolsRepo == null) {
+      clearDrawingToolSelection();
+      return;
+    }
+
     if (selectedDrawingTool != null) {
       shouldStopDrawing = true;
     }
 
     /// Remove unfinshed drawings before openning the dialog.
-    final List<DrawingData?> unfinishedDrawings = getDrawingData()
-        .where((DrawingData? data) => !data!.isDrawingFinished)
-        .toList();
-    if (unfinishedDrawings.isNotEmpty) {
-      drawingToolsRepo!
-          .removeAt(getDrawingData().indexOf(unfinishedDrawings.first));
+    final drawings = getDrawingData();
+    final unfinishedIndex = drawings.indexWhere(
+      (drawing) => drawing != null && !drawing.isDrawingFinished,
+    );
+    if (unfinishedIndex != -1) {
+      drawingToolsRepo!.removeAt(unfinishedIndex);
     }
 
     clearDrawingToolSelection();
@@ -85,7 +90,7 @@ class DrawingTools {
     List<EdgePoint>? edgePoints,
   }) {
     final DrawingData? existingDrawing = getDrawingData().firstWhereOrNull(
-      (DrawingData? drawing) => drawing!.id == drawingId,
+      (DrawingData? drawing) => drawing?.id == drawingId,
     );
 
     if (existingDrawing == null) {
@@ -119,14 +124,15 @@ class DrawingTools {
     }
 
     /// Remove any unfinished drawing before adding a new one.
-    final List<DrawingData?> unfinishedDrawings = getDrawingData()
-        .where((DrawingData? data) =>
-            data!.id != drawingId && !data.isDrawingFinished)
-        .toList();
-
-    if (unfinishedDrawings.isNotEmpty) {
-      drawingToolsRepo!
-          .removeAt(getDrawingData().indexOf(unfinishedDrawings.first));
+    final drawings = getDrawingData();
+    final unfinishedIndex = drawings.indexWhere(
+      (drawing) =>
+          drawing != null &&
+          drawing.id != drawingId &&
+          !drawing.isDrawingFinished,
+    );
+    if (unfinishedIndex != -1) {
+      drawingToolsRepo!.removeAt(unfinishedIndex);
     }
   }
 

@@ -16,7 +16,29 @@ import 'package:deriv_chart/src/theme/chart_default_light_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
+import '../../add_ons/indicators_ui/adx/adx_indicator_config.dart';
+import '../../add_ons/indicators_ui/alligator/alligator_indicator_config.dart';
+import '../../add_ons/indicators_ui/aroon/aroon_indicator_config.dart';
+import '../../add_ons/indicators_ui/awesome_oscillator/awesome_oscillator_indicator_config.dart';
+import '../../add_ons/indicators_ui/bollinger_bands/bollinger_bands_indicator_config.dart';
+import '../../add_ons/indicators_ui/commodity_channel_index/cci_indicator_config.dart';
+import '../../add_ons/indicators_ui/donchian_channel/donchian_channel_indicator_config.dart';
+import '../../add_ons/indicators_ui/dpo_indicator/dpo_indicator_config.dart';
+import '../../add_ons/indicators_ui/fcb_indicator/fcb_indicator_config.dart';
+import '../../add_ons/indicators_ui/gator/gator_indicator_config.dart';
+import '../../add_ons/indicators_ui/ichimoku_clouds/ichimoku_cloud_indicator_config.dart';
 import '../../add_ons/indicators_ui/indicator_config.dart';
+import '../../add_ons/indicators_ui/ma_env_indicator/ma_env_indicator_config.dart';
+import '../../add_ons/indicators_ui/ma_indicator/ma_indicator_config.dart';
+import '../../add_ons/indicators_ui/macd_indicator/macd_indicator_config.dart';
+import '../../add_ons/indicators_ui/parabolic_sar/parabolic_sar_indicator_config.dart';
+import '../../add_ons/indicators_ui/rainbow_indicator/rainbow_indicator_config.dart';
+import '../../add_ons/indicators_ui/roc/roc_indicator_config.dart';
+import '../../add_ons/indicators_ui/rsi/rsi_indicator_config.dart';
+import '../../add_ons/indicators_ui/smi/smi_indicator_config.dart';
+import '../../add_ons/indicators_ui/stochastic_oscillator_indicator/stochastic_oscillator_indicator_config.dart';
+import '../../add_ons/indicators_ui/williams_r/williams_r_indicator_config.dart';
+import '../../add_ons/indicators_ui/zigzag_indicator/zigzag_indicator_config.dart';
 import '../../add_ons/repository.dart';
 import '../../misc/chart_controller.dart';
 import '../../models/tick.dart';
@@ -219,12 +241,14 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
   late ChartTheme _chartTheme;
   late List<Series>? bottomSeries;
   int? expandedIndex;
+  Repository<IndicatorConfig>? _listenedIndicatorsRepo;
 
   @override
   void initState() {
     super.initState();
     WidgetsFlutterBinding.ensureInitialized().addObserver(this);
     _initChartController();
+    _attachIndicatorsRepo(widget.indicatorsRepo);
   }
 
   @override
@@ -257,6 +281,177 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
         (Theme.of(context).brightness == Brightness.dark
             ? ChartDefaultDarkTheme()
             : ChartDefaultLightTheme());
+  }
+
+  void _attachIndicatorsRepo(Repository<IndicatorConfig>? repository) {
+    if (identical(repository, _listenedIndicatorsRepo)) {
+      return;
+    }
+
+    _listenedIndicatorsRepo?.removeListener(_handleIndicatorsRepoChanged);
+    _listenedIndicatorsRepo = repository;
+    _listenedIndicatorsRepo?.addListener(_handleIndicatorsRepoChanged);
+  }
+
+  void _handleIndicatorsRepoChanged() {
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
+  }
+
+  void _onIndicatorHideToggleTapped(
+    Repository<IndicatorConfig>? repository,
+    int index,
+  ) {
+    if (repository == null) {
+      return;
+    }
+    repository.updateHiddenStatus(
+      index: index,
+      hidden: !repository.getHiddenStatus(index),
+    );
+  }
+
+  Widget _buildOverlayIndicatorsLabels() {
+    final Repository<IndicatorConfig>? repository = widget.indicatorsRepo;
+    if (repository == null) {
+      return const SizedBox.shrink();
+    }
+
+    final List<Widget> overlayIndicatorsLabels = <Widget>[];
+    for (int i = 0; i < repository.items.length; i++) {
+      final IndicatorConfig config = repository.items[i];
+      if (!config.isOverlay) {
+        continue;
+      }
+
+      overlayIndicatorsLabels.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: Dimens.margin04),
+          child: IndicatorLabelMobile(
+            title:
+                '${config.shortTitle} ${config.number > 0 ? config.number : ''}'
+                ' (${config.configSummary})',
+            titleColor: _resolveIndicatorLabelColor(config),
+            showMoveUpIcon: false,
+            showMoveDownIcon: false,
+            isHidden: repository.getHiddenStatus(i),
+            onEditTapped: () {
+              repository.editAt(i);
+            },
+            onHideUnhideToggle: () {
+              _onIndicatorHideToggleTapped(repository, i);
+            },
+          ),
+        ),
+      );
+    }
+
+    if (overlayIndicatorsLabels.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: overlayIndicatorsLabels,
+    );
+  }
+
+  Color? _resolveIndicatorLabelColor(IndicatorConfig config) {
+    if (config is BollingerBandsIndicatorConfig) {
+      return config.middleLineStyle.color;
+    }
+
+    if (config is MAEnvIndicatorConfig) {
+      return config.middleLineStyle.color;
+    }
+
+    if (config is DonchianChannelIndicatorConfig) {
+      return config.middleLineStyle.color;
+    }
+
+    if (config is AlligatorIndicatorConfig) {
+      return config.jawLineStyle.color;
+    }
+
+    if (config is RainbowIndicatorConfig) {
+      final styles = config.rainbowLineStyles;
+      if (styles != null && styles.isNotEmpty) {
+        return styles.first.color;
+      }
+      return null;
+    }
+
+    if (config is MAIndicatorConfig) {
+      return config.lineStyle.color;
+    }
+
+    if (config is ZigZagIndicatorConfig) {
+      return config.lineStyle.color;
+    }
+
+    if (config is RSIIndicatorConfig) {
+      return config.lineStyle.color;
+    }
+
+    if (config is CCIIndicatorConfig) {
+      return config.lineStyle.color;
+    }
+
+    if (config is ADXIndicatorConfig) {
+      return config.lineStyle.color;
+    }
+
+    if (config is DPOIndicatorConfig) {
+      return config.lineStyle.color;
+    }
+
+    if (config is SMIIndicatorConfig) {
+      return config.lineStyle?.color;
+    }
+
+    if (config is WilliamsRIndicatorConfig) {
+      return config.lineStyle.color;
+    }
+
+    if (config is StochasticOscillatorIndicatorConfig) {
+      return config.lineStyle.color;
+    }
+
+    if (config is AroonIndicatorConfig) {
+      return config.upLineStyle.color;
+    }
+
+    if (config is ROCIndicatorConfig) {
+      return config.lineStyle?.color;
+    }
+
+    if (config is MACDIndicatorConfig) {
+      return config.lineStyle.color;
+    }
+
+    if (config is IchimokuCloudIndicatorConfig) {
+      return config.conversionLineStyle.color;
+    }
+
+    if (config is ParabolicSARConfig) {
+      return config.scatterStyle.color;
+    }
+
+    if (config is FractalChaosBandIndicatorConfig) {
+      return config.highLineStyle.color;
+    }
+
+    if (config is AwesomeOscillatorIndicatorConfig) {
+      return config.barStyle.positiveColor;
+    }
+
+    if (config is GatorIndicatorConfig) {
+      return config.barStyle.positiveColor;
+    }
+
+    return null;
   }
 
   void _onCrosshairHover(
@@ -410,6 +605,7 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _listenedIndicatorsRepo?.removeListener(_handleIndicatorsRepoChanged);
     WidgetsFlutterBinding.ensureInitialized().removeObserver(this);
     super.dispose();
   }
@@ -424,6 +620,10 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
     }
     if (widget.theme != oldWidget.theme) {
       _initChartTheme();
+    }
+
+    if (!identical(widget.indicatorsRepo, oldWidget.indicatorsRepo)) {
+      _attachIndicatorsRepo(widget.indicatorsRepo);
     }
 
     //check if entire entries changes(market or granularity changes)

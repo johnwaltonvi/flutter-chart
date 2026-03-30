@@ -61,12 +61,16 @@ class _ChartStateMobile extends _ChartState {
             title:
                 '${config.shortTitle} ${config.number > 0 ? config.number : ''}'
                 ' (${config.configSummary})',
+            titleColor: _resolveIndicatorLabelColor(config),
             currentTickAnimationDuration: currentTickAnimationDuration,
             quoteBoundsAnimationDuration: quoteBoundsAnimationDuration,
             bottomChartTitleMargin:
                 const EdgeInsets.only(left: Dimens.margin04),
             onHideUnhideToggle: () =>
                 _onIndicatorHideToggleTapped(repository, index),
+            onEditTapped: () {
+              repository?.editAt(index);
+            },
             onSwap: (int offset) => _onSwap(
                 config, widget.bottomConfigs[indexInBottomConfigs + offset]),
             showMoveUpIcon:
@@ -195,16 +199,6 @@ class _ChartStateMobile extends _ChartState {
     return -1;
   }
 
-  void _onIndicatorHideToggleTapped(
-    Repository<IndicatorConfig>? repository,
-    int index,
-  ) {
-    repository?.updateHiddenStatus(
-      index: index,
-      hidden: !repository.getHiddenStatus(index),
-    );
-  }
-
   double _getBottomIndicatorsSectionHeightFraction(int bottomIndicatorsCount) =>
       1 - (0.65 - 0.125 * (bottomIndicatorsCount - 1));
 
@@ -217,39 +211,5 @@ class _ChartStateMobile extends _ChartState {
       }
     }
     return isAllHidden;
-  }
-
-  Widget _buildOverlayIndicatorsLabels() {
-    final List<Widget> overlayIndicatorsLabels = <Widget>[];
-    if (widget.indicatorsRepo != null) {
-      for (int i = 0; i < widget.indicatorsRepo!.items.length; i++) {
-        final IndicatorConfig config = widget.indicatorsRepo!.items[i];
-        if (!config.isOverlay) {
-          continue;
-        }
-
-        overlayIndicatorsLabels.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: Dimens.margin04),
-            child: IndicatorLabelMobile(
-              title:
-                  '${config.shortTitle} ${config.number > 0 ? config.number : ''}'
-                  ' (${config.configSummary})',
-              showMoveUpIcon: false,
-              showMoveDownIcon: false,
-              isHidden: widget.indicatorsRepo?.getHiddenStatus(i) ?? false,
-              onHideUnhideToggle: () {
-                _onIndicatorHideToggleTapped(widget.indicatorsRepo, i);
-              },
-            ),
-          ),
-        );
-      }
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: overlayIndicatorsLabels,
-    );
   }
 }

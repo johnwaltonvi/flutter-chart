@@ -21,10 +21,12 @@ class BottomChartMobile extends BasicChart {
     required Series series,
     required this.granularity,
     required this.title,
+    this.titleColor,
     this.showFrame = true,
     int pipSize = 4,
     Key? key,
     this.onHideUnhideToggle,
+    this.onEditTapped,
     this.onSwap,
     this.isHidden = false,
     this.showMoveUpIcon = false,
@@ -41,6 +43,9 @@ class BottomChartMobile extends BasicChart {
   /// Called when an indicator is to be expanded.
   final VoidCallback? onHideUnhideToggle;
 
+  /// Called when the indicator settings icon is tapped.
+  final VoidCallback? onEditTapped;
+
   /// Called when an indicator is to moved up/down.
   final SwapCallback? onSwap;
 
@@ -49,6 +54,9 @@ class BottomChartMobile extends BasicChart {
 
   /// The title of the bottom chart.
   final String title;
+
+  /// Optional color for the indicator title.
+  final Color? titleColor;
 
   /// Whether the move up icon should be shown or not.
   final bool showMoveUpIcon;
@@ -122,10 +130,12 @@ class _BottomChartMobileState extends BasicChartState<BottomChartMobile> {
 
   Widget _buildIndicatorLabelMobile() => IndicatorLabelMobile(
         title: widget.title,
+        titleColor: widget.titleColor,
         showMoveUpIcon: widget.showMoveUpIcon,
         showMoveDownIcon: widget.showMoveDownIcon,
         isHidden: widget.isHidden,
         onHideUnhideToggle: widget.onHideUnhideToggle,
+        onEditTapped: widget.onEditTapped,
         onSwap: widget.onSwap,
       );
 
@@ -161,16 +171,21 @@ class IndicatorLabelMobile extends StatelessWidget {
   /// Initializes a bottom chart indicator label.
   const IndicatorLabelMobile({
     required this.title,
+    this.titleColor,
     required this.showMoveUpIcon,
     required this.showMoveDownIcon,
     required this.isHidden,
     this.onHideUnhideToggle,
+    this.onEditTapped,
     this.onSwap,
     super.key,
   });
 
   /// The title of the indicator.
   final String title;
+
+  /// Optional color for the indicator title.
+  final Color? titleColor;
 
   /// Whether to show the move up icon.
   final bool showMoveUpIcon;
@@ -184,12 +199,16 @@ class IndicatorLabelMobile extends StatelessWidget {
   /// Called when an indicator is to be expanded.
   final VoidCallback? onHideUnhideToggle;
 
+  /// Called when the settings icon is tapped.
+  final VoidCallback? onEditTapped;
+
   /// Called when an indicator is to moved up/down.
   final SwapCallback? onSwap;
 
   @override
   Widget build(BuildContext context) {
     final ChartTheme theme = context.read<ChartTheme>();
+    final Color resolvedTitleColor = titleColor ?? theme.base01Color;
     return ClipRRect(
       borderRadius: BorderRadius.circular(Dimens.margin04),
       child: BackdropFilter(
@@ -209,10 +228,10 @@ class IndicatorLabelMobile extends StatelessWidget {
               BottomIndicatorTitle(
                 title,
                 theme.textStyle(
-                  color: theme.base01Color,
+                  color: resolvedTitleColor,
                   textStyle: theme.textStyle(
                     textStyle: TextStyles.caption,
-                    color: theme.base01Color,
+                    color: resolvedTitleColor,
                   ),
                 ),
               ),
@@ -227,6 +246,14 @@ class IndicatorLabelMobile extends StatelessWidget {
 
   Widget _buildIcons(BuildContext context) => Row(
         children: <Widget>[
+          if (onEditTapped != null)
+            _buildIcon(
+              iconData: Icons.settings_outlined,
+              context: context,
+              onPressed: () {
+                onEditTapped?.call();
+              },
+            ),
           _buildIcon(
             iconData: isHidden
                 ? Icons.visibility_off_outlined
@@ -266,18 +293,107 @@ class IndicatorLabelMobile extends StatelessWidget {
           type: MaterialType.circle,
           color: Colors.transparent,
           clipBehavior: Clip.antiAlias,
-          child: IconButton(
-            style: IconButton.styleFrom(
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            icon: Icon(
-              iconData,
-              size: 16,
-              color: context.read<ChartTheme>().base01Color,
-            ),
+          child: _PointerTapIcon(
+            iconData: iconData,
+            color: context.read<ChartTheme>().base01Color,
             onPressed: onPressed,
-            padding: const EdgeInsets.all(Dimens.margin04),
-            constraints: const BoxConstraints(),
           ),
         ),
       );
+}
+
+class _PointerTapIcon extends StatefulWidget {
+  const _PointerTapIcon({
+    required this.iconData,
+    required this.color,
+    required this.onPressed,
+  });
+
+  final IconData iconData;
+  final Color color;
+  final VoidCallback? onPressed;
+
+  @override
+  State<_PointerTapIcon> createState() => _PointerTapIconState();
+}
+
+class _PointerTapIconState extends State<_PointerTapIcon> {
+  static const double _tapSlop = 6;
+
+  int? _activePointer;
+  Offset? _downPosition;
+  bool _hovered = false;
+
+  void _clearPointerState() {
+    _activePointer = null;
+    _downPosition = null;
+  }
+
+  void _handlePointerDown(PointerDownEvent event) {
+    if (widget.onPressed == null) {
+      return;
+    }
+    _activePointer = event.pointer;
+    _downPosition = event.position;
+  }
+
+  void _handlePointerUp(PointerUpEvent event) {
+    if (widget.onPressed == null) {
+      return;
+    }
+    if (_activePointer != event.pointer) {
+      return;
+    }
+
+    final downPosition = _downPosition;
+    _clearPointerState();
+    if (downPosition == null) {
+      return;
+    }
+
+    if ((event.position - downPosition).distance > _tapSlop) {
+      return;
+    }
+
+    widget.onPressed?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = widget.onPressed != null;
+    final color = enabled ? widget.color : widget.color.withOpacity(0.4);
+    final hoveredBackground = enabled
+        ? context.read<ChartTheme>().crosshairInformationBoxContainerGlassColor
+            .withOpacity(0.12)
+        : Colors.transparent;
+
+    return MouseRegion(
+      cursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) {
+        _clearPointerState();
+        setState(() => _hovered = false);
+      },
+      child: Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: enabled ? _handlePointerDown : null,
+        onPointerUp: enabled ? _handlePointerUp : null,
+        onPointerCancel: (_) => _clearPointerState(),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _hovered ? hoveredBackground : Colors.transparent,
+          ),
+          padding: const EdgeInsets.all(Dimens.margin04),
+          child: Icon(
+            widget.iconData,
+            size: 16,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
 }

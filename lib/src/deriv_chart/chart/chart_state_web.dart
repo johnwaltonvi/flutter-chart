@@ -15,40 +15,76 @@ class _ChartStateWeb extends _ChartState {
 
     final bool isExpanded = expandedIndex != null;
 
+    final List<Series>? resolvedOverlaySeries;
+    if (widget.indicatorsRepo == null) {
+      resolvedOverlaySeries = overlaySeries;
+    } else {
+      final List<Series> series = <Series>[];
+      for (int i = 0; i < widget.indicatorsRepo!.items.length; i++) {
+        final IndicatorConfig config = widget.indicatorsRepo!.items[i];
+        if (widget.indicatorsRepo!.getHiddenStatus(i) || !config.isOverlay) {
+          continue;
+        }
+        series.add(
+          config.getSeries(
+            IndicatorInput(
+              widget.mainSeries.input,
+              widget.granularity,
+            ),
+          ),
+        );
+      }
+      resolvedOverlaySeries = series;
+    }
+
     return Column(
       children: <Widget>[
         Expanded(
           flex: 3,
-          child: MainChart(
-            drawingTools: widget.drawingTools,
-            controller: _controller,
-            mainSeries: widget.mainSeries,
-            overlaySeries: overlaySeries,
-            annotations: widget.annotations,
-            markerSeries: widget.markerSeries,
-            pipSize: widget.pipSize,
-            onCrosshairAppeared: widget.onCrosshairAppeared,
-            onQuoteAreaChanged: widget.onQuoteAreaChanged,
-            isLive: widget.isLive,
-            showLoadingAnimationForHistoricalData: !widget.dataFitEnabled,
-            showDataFitButton:
-                widget.showDataFitButton ?? widget.dataFitEnabled,
-            showScrollToLastTickButton:
-                widget.showScrollToLastTickButton ?? true,
-            opacity: widget.opacity,
-            chartAxisConfig: widget.chartAxisConfig,
-            verticalPaddingFraction: widget.verticalPaddingFraction,
-            showCrosshair: widget.showCrosshair,
-            onCrosshairDisappeared: widget.onCrosshairDisappeared,
-            onCrosshairHover: _onCrosshairHover,
-            loadingAnimationColor: widget.loadingAnimationColor,
-            currentTickAnimationDuration: currentTickAnimationDuration,
-            quoteBoundsAnimationDuration: quoteBoundsAnimationDuration,
-            showCurrentTickBlinkAnimation:
-                widget.showCurrentTickBlinkAnimation ?? true,
-            crosshairVariant: widget.crosshairVariant,
-            interactiveLayerBehaviour: widget.interactiveLayerBehaviour,
-            useDrawingToolsV2: widget.useDrawingToolsV2,
+          child: Stack(
+            children: <Widget>[
+              MainChart(
+                drawingTools: widget.drawingTools,
+                controller: _controller,
+                mainSeries: widget.mainSeries,
+                overlaySeries: resolvedOverlaySeries,
+                annotations: widget.annotations,
+                markerSeries: widget.markerSeries,
+                pipSize: widget.pipSize,
+                onCrosshairAppeared: widget.onCrosshairAppeared,
+                onQuoteAreaChanged: widget.onQuoteAreaChanged,
+                isLive: widget.isLive,
+                showLoadingAnimationForHistoricalData: !widget.dataFitEnabled,
+                showDataFitButton:
+                    widget.showDataFitButton ?? widget.dataFitEnabled,
+                showScrollToLastTickButton:
+                    widget.showScrollToLastTickButton ?? true,
+                opacity: widget.opacity,
+                chartAxisConfig: widget.chartAxisConfig,
+                verticalPaddingFraction: widget.verticalPaddingFraction,
+                showCrosshair: widget.showCrosshair,
+                onCrosshairDisappeared: widget.onCrosshairDisappeared,
+                onCrosshairHover: _onCrosshairHover,
+                loadingAnimationColor: widget.loadingAnimationColor,
+                currentTickAnimationDuration: currentTickAnimationDuration,
+                quoteBoundsAnimationDuration: quoteBoundsAnimationDuration,
+                showCurrentTickBlinkAnimation:
+                    widget.showCurrentTickBlinkAnimation ?? true,
+                crosshairVariant: widget.crosshairVariant,
+                interactiveLayerBehaviour: widget.interactiveLayerBehaviour,
+                useDrawingToolsV2: widget.useDrawingToolsV2,
+              ),
+              Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: Dimens.margin08,
+                    horizontal: Dimens.margin04,
+                  ),
+                  child: _buildOverlayIndicatorsLabels(),
+                ),
+              ),
+            ],
           ),
         ),
         if (bottomSeries?.isNotEmpty ?? false)

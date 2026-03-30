@@ -1,6 +1,7 @@
 import 'package:deriv_chart/generated/l10n.dart';
 import 'package:deriv_chart/src/add_ons/indicators_ui/indicator_config.dart';
 import 'package:deriv_chart/src/add_ons/indicators_ui/oscillator_lines/oscillator_lines_config.dart';
+import 'package:deriv_chart/src/add_ons/indicators_ui/widgets/field_widget.dart';
 import 'package:deriv_chart/src/add_ons/indicators_ui/widgets/oscillator_limit.dart';
 import 'package:deriv_chart/src/theme/painting_styles/line_style.dart';
 
@@ -42,6 +43,16 @@ class RSIIndicatorItemState extends IndicatorItemState<RSIIndicatorConfig> {
   LineStyle? _oversoldStyle;
   bool? _showZones;
 
+  InputDecoration _inputDecoration(String label) => InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+      );
+
   @override
   RSIIndicatorConfig updateIndicatorConfig() =>
       (widget.config as RSIIndicatorConfig).copyWith(
@@ -57,93 +68,84 @@ class RSIIndicatorItemState extends IndicatorItemState<RSIIndicatorConfig> {
       );
 
   @override
-  Widget getIndicatorOptions() => Column(
-        children: <Widget>[
-          _buildPeriodField(),
-          _buildFieldTypeMenu(),
-          _buildOverBoughtPriceField(),
-          _buildOverSoldPriceField(),
-          _buildShowZonesField(),
-        ],
-      );
+  Widget getIndicatorOptions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(child: _buildPeriodField()),
+            const SizedBox(width: 12),
+            Expanded(child: _buildFieldTypeMenu()),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _buildOverBoughtPriceField(),
+        const SizedBox(height: 12),
+        _buildOverSoldPriceField(),
+        const SizedBox(height: 12),
+        _buildShowZonesField(),
+      ],
+    );
+  }
 
-  Widget _buildShowZonesField() => Row(
-        children: <Widget>[
-          Text(
+  Widget _buildShowZonesField() {
+    final ThemeData theme = Theme.of(context);
+
+    return Row(
+      children: <Widget>[
+        Switch(
+          value: _currentShowZones,
+          onChanged: (bool value) {
+            setState(() {
+              _showZones = value;
+            });
+            updateIndicator();
+          },
+          activeColor: theme.colorScheme.primary,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
             ChartLocalization.of(context).labelShowZones,
-            style: const TextStyle(fontSize: 10),
+            style: theme.textTheme.bodyMedium,
           ),
-          const SizedBox(width: 4),
-          Switch(
-            value: _currentShowZones,
-            onChanged: (bool value) {
-              setState(() {
-                _showZones = value;
-              });
-              updateIndicator();
-            },
-            activeTrackColor: Colors.lightGreenAccent,
-            activeColor: Colors.green,
-          ),
-        ],
-      );
+        ),
+      ],
+    );
+  }
 
-  Widget _buildPeriodField() => Row(
-        children: <Widget>[
-          Text(
-            ChartLocalization.of(context).labelPeriod,
-            style: const TextStyle(fontSize: 10),
-          ),
-          const SizedBox(width: 4),
-          SizedBox(
-            width: 20,
-            child: TextFormField(
-              style: const TextStyle(fontSize: 10),
-              initialValue: _getCurrentPeriod().toString(),
-              keyboardType: TextInputType.number,
-              onChanged: (String text) {
-                if (text.isNotEmpty) {
-                  _period = int.tryParse(text);
-                } else {
-                  _period = 14;
-                }
-                updateIndicator();
-              },
-            ),
-          ),
-        ],
+  Widget _buildPeriodField() => FieldWidget(
+        initialValue: _getCurrentPeriod().toString(),
+        label: ChartLocalization.of(context).labelPeriod,
+        onValueChanged: (String text) {
+          if (text.isNotEmpty) {
+            _period = int.tryParse(text);
+          } else {
+            _period = 14;
+          }
+          updateIndicator();
+        },
       );
 
   int _getCurrentPeriod() =>
       _period ?? (widget.config as RSIIndicatorConfig).period;
 
-  Widget _buildFieldTypeMenu() => Row(
-        children: <Widget>[
-          Text(
-            ChartLocalization.of(context).labelField,
-            style: const TextStyle(fontSize: 10),
-          ),
-          const SizedBox(width: 4),
-          DropdownButton<String>(
-            value: _getCurrentField(),
-            items: IndicatorConfig.supportedFieldTypes.keys
-                .map<DropdownMenuItem<String>>(
-                    (String fieldType) => DropdownMenuItem<String>(
-                          value: fieldType,
-                          child: Text(
-                            '$fieldType',
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                        ))
-                .toList(),
-            onChanged: (String? newField) => setState(
-              () {
-                _field = newField;
-                updateIndicator();
-              },
-            ),
-          )
-        ],
+  Widget _buildFieldTypeMenu() => DropdownButtonFormField<String>(
+        value: _getCurrentField(),
+        decoration: _inputDecoration(ChartLocalization.of(context).labelField),
+        items: IndicatorConfig.supportedFieldTypes.keys
+            .map<DropdownMenuItem<String>>(
+              (String fieldType) => DropdownMenuItem<String>(
+                value: fieldType,
+                child: Text(fieldType),
+              ),
+            )
+            .toList(),
+        onChanged: (String? newField) => setState(() {
+          _field = newField;
+          updateIndicator();
+        }),
       );
 
   String _getCurrentField() =>

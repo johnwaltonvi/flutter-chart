@@ -102,6 +102,17 @@ class AddOnsRepository<T extends AddOnConfig> extends ChangeNotifier
     notifyListeners();
   }
 
+  /// Inserts a new indicator or drawing tool at [index] and updates storage.
+  ///
+  /// This is useful for undo flows where the original ordering should be kept.
+  void insertAt(int index, T addOnConfig) {
+    final int safeIndex = index.clamp(0, items.length);
+    items.insert(safeIndex, addOnConfig);
+    _hiddenStatus.insert(safeIndex, false);
+    _writeToPrefs();
+    notifyListeners();
+  }
+
   /// Called when the edit icon is clicked.
   @override
   void editAt(int index) {

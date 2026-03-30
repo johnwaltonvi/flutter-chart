@@ -53,19 +53,36 @@ abstract class IndicatorItemState<T extends IndicatorConfig>
   }
 
   @override
-  Widget build(BuildContext context) => ListTile(
-        contentPadding: const EdgeInsets.all(0),
-        leading: Text(
-          '${widget.config.shortTitle}'
-          ' ${widget.config.number > 0 ? widget.config.number : ''}',
-          style: const TextStyle(fontSize: 10),
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final String title = '${widget.config.shortTitle}'
+        '${widget.config.number > 0 ? ' ${widget.config.number}' : ''}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: 'Remove',
+              icon: const Icon(Icons.delete_outline),
+              onPressed: removeIndicator,
+            ),
+          ],
         ),
-        title: getIndicatorOptions(),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete),
-          onPressed: removeIndicator,
-        ),
-      );
+        const SizedBox(height: 8),
+        getIndicatorOptions(),
+      ],
+    );
+  }
 
   /// Updates indicator based on its current config values.
   void updateIndicator() =>

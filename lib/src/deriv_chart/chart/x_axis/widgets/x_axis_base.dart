@@ -204,20 +204,22 @@ class XAxisState extends State<XAxisBase> with TickerProviderStateMixin {
                   ),
                 ),
                 if (context.read<ChartConfig>().chartAxisConfig.showEpochGrid)
-                  RepaintBoundary(
-                    child: CustomPaint(
-                      painter: XGridPainter(
-                        timestamps: _noOverlapGridTimestamps
-                            .map<DateTime>(
-                                (DateTime time) => /*timeLabel(time)*/ time)
-                            .toList(),
-                        xCoords: _noOverlapGridTimestamps
-                            .map<double>((DateTime time) =>
-                                _model.xFromEpoch(time.millisecondsSinceEpoch))
-                            .toList(),
-                        style: _chartTheme,
-                        msPerPx: _model.msPerPx,
-                        timeFormat: context.read<ChartConfig>().timeFormat,
+                  IgnorePointer(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        painter: XGridPainter(
+                          timestamps: _noOverlapGridTimestamps
+                              .map<DateTime>(
+                                  (DateTime time) => /*timeLabel(time)*/ time)
+                              .toList(),
+                          xCoords: _noOverlapGridTimestamps
+                              .map<double>((DateTime time) => _model
+                                  .xFromEpoch(time.millisecondsSinceEpoch))
+                              .toList(),
+                          style: _chartTheme,
+                          msPerPx: _model.msPerPx,
+                          timeFormat: context.read<ChartConfig>().timeFormat,
+                        ),
                       ),
                     ),
                   ),
