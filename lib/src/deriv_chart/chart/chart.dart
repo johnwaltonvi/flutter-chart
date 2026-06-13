@@ -261,17 +261,77 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
     _controller = widget.controller ?? ChartController();
   }
 
-  List<Series>? _getIndicatorSeries(List<IndicatorConfig>? configs) {
+  IndicatorInput _buildIndicatorInput() =>
+      IndicatorInput(widget.mainSeries.input, widget.granularity);
+
+  bool _canRenderIndicator(
+    IndicatorConfig config, {
+    IndicatorInput? indicatorInput,
+  }) {
+    return config.canRender(indicatorInput ?? _buildIndicatorInput());
+  }
+
+  List<IndicatorConfig> _getRenderableConfigs(
+    List<IndicatorConfig>? configs, {
+    IndicatorInput? indicatorInput,
+  }) {
+    final source = configs;
+    if (source == null || source.isEmpty) {
+      return const <IndicatorConfig>[];
+    }
+
+    final input = indicatorInput ?? _buildIndicatorInput();
+    return source
+        .where((config) => _canRenderIndicator(config, indicatorInput: input))
+        .toList(growable: false);
+  }
+
+  List<IndicatorConfig> getRenderableRepositoryConfigs({
+    required bool isOverlay,
+    IndicatorInput? indicatorInput,
+  }) {
+    final repository = widget.indicatorsRepo;
+    if (repository == null) {
+      return const <IndicatorConfig>[];
+    }
+
+    final input = indicatorInput ?? _buildIndicatorInput();
+    return repository.items
+        .where(
+          (config) =>
+              config.isOverlay == isOverlay &&
+              _canRenderIndicator(config, indicatorInput: input),
+        )
+        .toList(growable: false);
+  }
+
+  String formatIndicatorTitle(
+    IndicatorConfig config, {
+    bool includeSummary = true,
+  }) {
+    final suffix = config.number > 0 ? ' ${config.number}' : '';
+    if (!includeSummary || config.configSummary.trim().isEmpty) {
+      return '${config.shortTitle}$suffix';
+    }
+    return '${config.shortTitle}$suffix (${config.configSummary})';
+  }
+
+  List<Series>? _getIndicatorSeries(
+    List<IndicatorConfig>? configs, {
+    IndicatorInput? indicatorInput,
+  }) {
     if (configs == null) {
       return null;
     }
 
-    return configs
+    final input = indicatorInput ?? _buildIndicatorInput();
+    final renderableConfigs = configs
+        .where((config) => _canRenderIndicator(config, indicatorInput: input))
+        .toList(growable: false);
+
+    return renderableConfigs
         .map((IndicatorConfig indicatorConfig) => indicatorConfig.getSeries(
-              IndicatorInput(
-                widget.mainSeries.input,
-                widget.granularity,
-              ),
+              input,
             ))
         .toList();
   }
@@ -319,10 +379,12 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
       return const SizedBox.shrink();
     }
 
+    final indicatorInput = _buildIndicatorInput();
     final List<Widget> overlayIndicatorsLabels = <Widget>[];
     for (int i = 0; i < repository.items.length; i++) {
       final IndicatorConfig config = repository.items[i];
-      if (!config.isOverlay) {
+      if (!config.isOverlay ||
+          !_canRenderIndicator(config, indicatorInput: indicatorInput)) {
         continue;
       }
 
@@ -330,9 +392,7 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
         Padding(
           padding: const EdgeInsets.only(bottom: Dimens.margin04),
           child: IndicatorLabelMobile(
-            title:
-                '${config.shortTitle} ${config.number > 0 ? config.number : ''}'
-                ' (${config.configSummary})',
+            title: formatIndicatorTitle(config),
             titleColor: _resolveIndicatorLabelColor(config),
             showMoveUpIcon: false,
             showMoveDownIcon: false,
@@ -489,11 +549,25 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
         granularity: widget.granularity,
         msPerPx: widget.msPerPx ?? defaultMsPerPx);
 
-    final List<Series>? overlaySeries =
-        _getIndicatorSeries(widget.overlayConfigs);
+    final indicatorInput = _buildIndicatorInput();
+    final renderableOverlayConfigs = _getRenderableConfigs(
+      widget.overlayConfigs,
+      indicatorInput: indicatorInput,
+    );
+    final renderableBottomConfigs = _getRenderableConfigs(
+      widget.bottomConfigs,
+      indicatorInput: indicatorInput,
+    );
 
-    final List<Series>? bottomSeries =
-        _getIndicatorSeries(widget.bottomConfigs);
+    final List<Series>? overlaySeries = _getIndicatorSeries(
+      renderableOverlayConfigs,
+      indicatorInput: indicatorInput,
+    );
+
+    final List<Series>? bottomSeries = _getIndicatorSeries(
+      renderableBottomConfigs,
+      indicatorInput: indicatorInput,
+    );
 
     final List<ChartData> chartDataList = <ChartData>[
       widget.mainSeries,
@@ -508,8 +582,8 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
             if (bottomSeries != null) ...bottomSeries,
           ])
       ..getConfigsList = (() => <IndicatorConfig>[
-            if (widget.overlayConfigs != null) ...?widget.overlayConfigs,
-            ...widget.bottomConfigs,
+            ...renderableOverlayConfigs,
+            ...renderableBottomConfigs,
           ]);
 
     final Duration currentTickAnimationDuration =

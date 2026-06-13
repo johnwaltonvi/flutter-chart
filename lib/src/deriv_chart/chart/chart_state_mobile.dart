@@ -33,6 +33,7 @@ class _ChartStateMobile extends _ChartState {
 
     final Duration quoteBoundsAnimationDuration =
         widget.quoteBoundsAnimationDuration ?? _defaultDuration;
+    final indicatorInput = _buildIndicatorInput();
 
     List<Widget> getBottomIndicatorsList(BuildContext context) =>
         widget.indicatorsRepo!.items
@@ -40,27 +41,29 @@ class _ChartStateMobile extends _ChartState {
           if (config.isOverlay) {
             return const SizedBox.shrink();
           }
+          if (!_canRenderIndicator(config, indicatorInput: indicatorInput)) {
+            return const SizedBox.shrink();
+          }
 
           final Series series = config.getSeries(
-            IndicatorInput(
-              widget.mainSeries.input,
-              widget.granularity,
-            ),
+            indicatorInput,
           );
           final Repository<IndicatorConfig>? repository = widget.indicatorsRepo;
+          final renderableBottomConfigs = getRenderableRepositoryConfigs(
+            isOverlay: false,
+            indicatorInput: indicatorInput,
+          );
 
           // TODO(Ramin): Use the key (type + number) once it's implemented.
           final int indexInBottomConfigs =
-              referenceIndexOf(widget.bottomConfigs, config);
+              referenceIndexOf(renderableBottomConfigs, config);
 
           final Widget bottomChart = BottomChartMobile(
             series: series,
             isHidden: repository?.getHiddenStatus(index) ?? false,
             granularity: widget.granularity,
             pipSize: config.pipSize,
-            title:
-                '${config.shortTitle} ${config.number > 0 ? config.number : ''}'
-                ' (${config.configSummary})',
+            title: formatIndicatorTitle(config),
             titleColor: _resolveIndicatorLabelColor(config),
             currentTickAnimationDuration: currentTickAnimationDuration,
             quoteBoundsAnimationDuration: quoteBoundsAnimationDuration,
@@ -72,11 +75,13 @@ class _ChartStateMobile extends _ChartState {
               repository?.editAt(index);
             },
             onSwap: (int offset) => _onSwap(
-                config, widget.bottomConfigs[indexInBottomConfigs + offset]),
+              config,
+              renderableBottomConfigs[indexInBottomConfigs + offset],
+            ),
             showMoveUpIcon:
-                bottomSeries!.length > 1 && indexInBottomConfigs != 0,
-            showMoveDownIcon: bottomSeries.length > 1 &&
-                indexInBottomConfigs != bottomSeries.length - 1,
+                renderableBottomConfigs.length > 1 && indexInBottomConfigs != 0,
+            showMoveDownIcon: renderableBottomConfigs.length > 1 &&
+                indexInBottomConfigs != renderableBottomConfigs.length - 1,
             showFrame: context.read<ChartConfig>().chartAxisConfig.showFrame,
           );
 
@@ -92,16 +97,13 @@ class _ChartStateMobile extends _ChartState {
     if (widget.indicatorsRepo != null) {
       for (int i = 0; i < widget.indicatorsRepo!.items.length; i++) {
         final IndicatorConfig config = widget.indicatorsRepo!.items[i];
-        if (widget.indicatorsRepo!.getHiddenStatus(i) || !config.isOverlay) {
+        if (widget.indicatorsRepo!.getHiddenStatus(i) ||
+            !config.isOverlay ||
+            !_canRenderIndicator(config, indicatorInput: indicatorInput)) {
           continue;
         }
 
-        overlaySeries.add(config.getSeries(
-          IndicatorInput(
-            widget.mainSeries.input,
-            widget.granularity,
-          ),
-        ));
+        overlaySeries.add(config.getSeries(indicatorInput));
       }
     }
 

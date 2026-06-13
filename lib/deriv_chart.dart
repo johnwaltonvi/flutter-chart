@@ -41,6 +41,8 @@ export 'src/add_ons/indicators_ui/roc/roc_indicator_config.dart';
 export 'src/add_ons/indicators_ui/rsi/rsi_indicator_config.dart';
 export 'src/add_ons/indicators_ui/smi/smi_indicator_config.dart';
 export 'src/add_ons/indicators_ui/stochastic_oscillator_indicator/stochastic_oscillator_indicator_config.dart';
+export 'src/add_ons/indicators_ui/trades_indicator/trades_indicator_config.dart';
+export 'src/add_ons/indicators_ui/volume_indicator/volume_indicator_config.dart';
 export 'src/add_ons/indicators_ui/williams_r/williams_r_indicator_config.dart';
 export 'src/add_ons/indicators_ui/zigzag_indicator/zigzag_indicator_config.dart';
 export 'src/add_ons/repository.dart';

@@ -12,6 +12,8 @@ class Candle extends Tick with EquatableMixin {
     required this.low,
     required this.open,
     required this.close,
+    this.volume,
+    this.trades,
     int? currentEpoch,
   })  : currentEpoch = currentEpoch ?? epoch,
         super(epoch: epoch, quote: close);
@@ -49,6 +51,12 @@ class Candle extends Tick with EquatableMixin {
   @override
   final double close;
 
+  /// Optional volume value associated with this candle.
+  final double? volume;
+
+  /// Optional trades count associated with this candle.
+  final double? trades;
+
   /// The current time value of candle (it is the current time of the candle
   /// rather than start of it).
   final int currentEpoch;
@@ -60,6 +68,8 @@ class Candle extends Tick with EquatableMixin {
     double? low,
     double? open,
     double? close,
+    double? volume,
+    double? trades,
     int? currentEpoch,
   }) =>
       Candle(
@@ -68,14 +78,24 @@ class Candle extends Tick with EquatableMixin {
         low: low ?? this.low,
         open: open ?? this.open,
         close: close ?? this.close,
+        volume: volume ?? this.volume,
+        trades: trades ?? this.trades,
         currentEpoch: currentEpoch ?? this.currentEpoch,
       );
 
   @override
   String toString() =>
       'Candle(epoch: $epoch, high: $high, low: $low, open: $open, close: '
-      '$close, currentEpoch: $currentEpoch)';
+      '$close, volume: $volume, trades: $trades, currentEpoch: $currentEpoch)';
 
   @override
-  List<Object> get props => <Object>[epoch, open, close, high, low];
+  List<Object?> get props => <Object?>[
+        epoch,
+        open,
+        close,
+        high,
+        low,
+        volume,
+        trades,
+      ];
 }

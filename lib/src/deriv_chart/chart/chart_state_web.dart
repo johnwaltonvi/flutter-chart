@@ -14,28 +14,36 @@ class _ChartStateWeb extends _ChartState {
         widget.quoteBoundsAnimationDuration ?? _defaultDuration;
 
     final bool isExpanded = expandedIndex != null;
+    final indicatorInput = _buildIndicatorInput();
 
     final List<Series>? resolvedOverlaySeries;
     if (widget.indicatorsRepo == null) {
       resolvedOverlaySeries = overlaySeries;
     } else {
       final List<Series> series = <Series>[];
-      for (int i = 0; i < widget.indicatorsRepo!.items.length; i++) {
-        final IndicatorConfig config = widget.indicatorsRepo!.items[i];
-        if (widget.indicatorsRepo!.getHiddenStatus(i) || !config.isOverlay) {
+      for (final config in getRenderableRepositoryConfigs(
+        isOverlay: true,
+        indicatorInput: indicatorInput,
+      )) {
+        final repositoryIndex = widget.indicatorsRepo!.items.indexOf(config);
+        if (repositoryIndex == -1 ||
+            widget.indicatorsRepo!.getHiddenStatus(repositoryIndex) ||
+            !config.isOverlay) {
           continue;
         }
         series.add(
           config.getSeries(
-            IndicatorInput(
-              widget.mainSeries.input,
-              widget.granularity,
-            ),
+            indicatorInput,
           ),
         );
       }
       resolvedOverlaySeries = series;
     }
+
+    final renderableBottomConfigs = _getRenderableConfigs(
+      widget.bottomConfigs,
+      indicatorInput: indicatorInput,
+    );
 
     return Column(
       children: <Widget>[
@@ -98,20 +106,22 @@ class _ChartStateWeb extends _ChartState {
               child: BottomChart(
                 series: series,
                 granularity: widget.granularity,
-                pipSize: widget.bottomConfigs[index].pipSize,
-                title: widget.bottomConfigs[index].title,
+                pipSize: renderableBottomConfigs[index].pipSize,
+                title: renderableBottomConfigs[index].title,
                 currentTickAnimationDuration: currentTickAnimationDuration,
                 quoteBoundsAnimationDuration: quoteBoundsAnimationDuration,
                 bottomChartTitleMargin: widget.bottomChartTitleMargin,
-                onRemove: () => _onRemove(widget.bottomConfigs[index]),
-                onEdit: () => _onEdit(widget.bottomConfigs[index]),
+                onRemove: () => _onRemove(renderableBottomConfigs[index]),
+                onEdit: () => _onEdit(renderableBottomConfigs[index]),
                 onExpandToggle: () {
                   setState(() {
                     expandedIndex = expandedIndex != index ? index : null;
                   });
                 },
-                onSwap: (int offset) => _onSwap(widget.bottomConfigs[index],
-                    widget.bottomConfigs[index + offset]),
+                onSwap: (int offset) => _onSwap(
+                  renderableBottomConfigs[index],
+                  renderableBottomConfigs[index + offset],
+                ),
                 onCrosshairDisappeared: widget.onCrosshairDisappeared,
                 onCrosshairHover: (
                   Offset globalPosition,
@@ -128,7 +138,7 @@ class _ChartStateWeb extends _ChartState {
                   quoteToY,
                   epochFromX,
                   quoteFromY,
-                  widget.bottomConfigs[index],
+                  renderableBottomConfigs[index],
                 ),
                 isExpanded: isExpanded,
                 showCrosshair: widget.showCrosshair,

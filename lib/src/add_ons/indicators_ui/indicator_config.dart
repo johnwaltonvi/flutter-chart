@@ -5,6 +5,8 @@ import 'package:deriv_chart/src/add_ons/indicators_ui/roc/roc_indicator_config.d
 import 'package:deriv_chart/src/add_ons/indicators_ui/smi/smi_indicator_config.dart';
 import 'package:deriv_chart/src/add_ons/indicators_ui/gator/gator_indicator_config.dart';
 import 'package:deriv_chart/src/add_ons/indicators_ui/stochastic_oscillator_indicator/stochastic_oscillator_indicator_config.dart';
+import 'package:deriv_chart/src/add_ons/indicators_ui/trades_indicator/trades_indicator_config.dart';
+import 'package:deriv_chart/src/add_ons/indicators_ui/volume_indicator/volume_indicator_config.dart';
 import 'package:deriv_chart/src/add_ons/indicators_ui/macd_indicator/macd_indicator_config.dart';
 import 'package:deriv_chart/src/add_ons/indicators_ui/aroon/aroon_indicator_config.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/chart_series/series.dart';
@@ -92,6 +94,10 @@ abstract class IndicatorConfig extends AddOnConfig {
         return GatorIndicatorConfig.fromJson(json);
       case ROCIndicatorConfig.name:
         return ROCIndicatorConfig.fromJson(json);
+      case VolumeIndicatorConfig.name:
+        return VolumeIndicatorConfig.fromJson(json);
+      case TradesIndicatorConfig.name:
+        return TradesIndicatorConfig.fromJson(json);
       // Add new indicators here.
       default:
         throw ArgumentError.value(json, 'json', 'Unidentified indicator name.');
@@ -139,6 +145,12 @@ abstract class IndicatorConfig extends AddOnConfig {
 
   /// Creates indicator [Series] for the given [indicatorInput].
   Series getSeries(IndicatorInput indicatorInput);
+
+  /// Whether this indicator has enough input data to render.
+  ///
+  /// Indicators can override this to stay persisted while opting out of
+  /// rendering for specific datasets.
+  bool canRender(IndicatorInput indicatorInput) => true;
 
   /// Creates indicator UI.
   IndicatorItem getItem(
