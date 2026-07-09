@@ -37,8 +37,10 @@ class FibRetracementDrawingToolItemState
 
   @override
   FibRetracementDrawingToolConfig createDrawingToolConfig() =>
-      FibRetracementDrawingToolConfig(
+      (widget.config as FibRetracementDrawingToolConfig).copyWith(
         lineStyle: _currentLineStyle,
+        // The quick edit sets a single color for the whole drawing.
+        useOneColor: true,
       );
 
   @override

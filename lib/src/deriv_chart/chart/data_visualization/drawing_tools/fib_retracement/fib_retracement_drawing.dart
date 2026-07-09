@@ -1,9 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:deriv_chart/src/add_ons/drawing_tools_ui/drawing_tool_config.dart';
+import 'package:deriv_chart/src/add_ons/drawing_tools_ui/fib_retracement/fib_level.dart';
 import 'package:deriv_chart/src/add_ons/drawing_tools_ui/fib_retracement/fib_retracement_drawing_tool_config.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/chart_series/data_series.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/data_model/draggable_edge_point.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/data_model/drawing_paint_style.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/data_model/drawing_parts.dart';
+import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/data_model/drawing_pattern.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/data_model/edge_point.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/data_model/point.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/drawing_tools/drawing.dart';
@@ -38,16 +42,6 @@ class FibRetracementDrawing extends Drawing {
   /// Key of drawing tool name property in JSON.
   static const String nameKey = 'FibRetracementDrawing';
 
-  static const List<double> _levels = <double>[
-    0,
-    0.236,
-    0.382,
-    0.5,
-    0.618,
-    0.786,
-    1,
-  ];
-
   /// Part of a drawing.
   final DrawingParts drawingPart;
 
@@ -61,6 +55,8 @@ class FibRetracementDrawing extends Drawing {
 
   Point? _startPoint;
   Point? _endPoint;
+  double _lineLeft = 0;
+  double _lineRight = 0;
 
   @override
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -117,6 +113,15 @@ class FibRetracementDrawing extends Drawing {
     final rightX =
         startOffset.dx > endOffset.dx ? startOffset.dx : endOffset.dx;
 
+    _lineLeft = fibConfig.extend == FibExtendMode.left ||
+            fibConfig.extend == FibExtendMode.both
+        ? 0
+        : leftX;
+    _lineRight = fibConfig.extend == FibExtendMode.right ||
+            fibConfig.extend == FibExtendMode.both
+        ? size.width
+        : rightX;
+
     if (drawingPart == DrawingParts.marker) {
       final markerOffset = endEdgePoint.epoch == 0 && endEdgePoint.quote == 0
           ? startOffset
@@ -132,38 +137,80 @@ class FibRetracementDrawing extends Drawing {
       return;
     }
 
-    final linePaint = drawingData.shouldHighlight
-        ? paint.glowyLinePaintStyle(
-            fibConfig.lineStyle.color,
-            fibConfig.lineStyle.thickness,
-          )
-        : paint.linePaintStyle(
-            fibConfig.lineStyle.color,
-            fibConfig.lineStyle.thickness,
-          );
+    final enabledLevels = _enabledLevels(fibConfig);
+    double levelY(FibLevel level) =>
+        startOffset.dy + ((endOffset.dy - startOffset.dy) * level.value);
 
-    final textStyle = TextStyle(
-      color: fibConfig.lineStyle.color,
-      fontSize: 11,
-      fontWeight: FontWeight.w500,
-    );
+    if (fibConfig.fillEnabled && enabledLevels.length > 1) {
+      final sorted = List<FibLevel>.of(enabledLevels)
+        ..sort((a, b) => a.value.compareTo(b.value));
+      for (var i = 0; i < sorted.length - 1; i++) {
+        final yA = levelY(sorted[i]);
+        final yB = levelY(sorted[i + 1]);
+        final fillPaint = Paint()
+          ..color = _levelColor(fibConfig, sorted[i + 1])
+              .withValues(alpha: fibConfig.fillOpacity.clamp(0.0, 1.0))
+          ..style = PaintingStyle.fill;
+        canvas.drawRect(
+          Rect.fromLTRB(
+            _lineLeft,
+            math.min(yA, yB),
+            _lineRight,
+            math.max(yA, yB),
+          ),
+          fillPaint,
+        );
+      }
+    }
 
-    for (final level in _levels) {
-      final y = startOffset.dy + ((endOffset.dy - startOffset.dy) * level);
-
-      canvas.drawLine(
-        Offset(leftX, y),
-        Offset(rightX, y),
-        linePaint,
-      );
-
-      paintText(
+    if (fibConfig.showTrendLine) {
+      final trendPaint = drawingData.shouldHighlight
+          ? paint.glowyLinePaintStyle(
+              fibConfig.trendLineStyle.color,
+              fibConfig.trendLineStyle.thickness,
+            )
+          : paint.linePaintStyle(
+              fibConfig.trendLineStyle.color,
+              fibConfig.trendLineStyle.thickness,
+            );
+      _paintStyledLine(
         canvas,
-        text: _formatLevel(level),
-        anchor: Offset(leftX + 6, y),
-        style: textStyle,
-        anchorAlignment: Alignment.centerLeft,
+        startOffset,
+        endOffset,
+        trendPaint,
+        fibConfig.trendLinePattern,
       );
+    }
+
+    for (final level in enabledLevels) {
+      final y = levelY(level);
+      final color = _levelColor(fibConfig, level);
+
+      final linePaint = drawingData.shouldHighlight
+          ? paint.glowyLinePaintStyle(color, fibConfig.lineStyle.thickness)
+          : paint.linePaintStyle(color, fibConfig.lineStyle.thickness);
+
+      _paintStyledLine(
+        canvas,
+        Offset(_lineLeft, y),
+        Offset(_lineRight, y),
+        linePaint,
+        fibConfig.levelsPattern,
+      );
+
+      if (fibConfig.showLabels) {
+        paintText(
+          canvas,
+          text: _labelText(fibConfig, level, quoteFromY(y)),
+          anchor: Offset(_lineLeft + 6, y),
+          style: TextStyle(
+            color: color,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+          anchorAlignment: Alignment.centerLeft,
+        );
+      }
     }
   }
 
@@ -188,9 +235,6 @@ class FibRetracementDrawing extends Drawing {
 
     final startOffset = Offset(_startPoint!.x, _startPoint!.y);
     final endOffset = Offset(_endPoint!.x, _endPoint!.y);
-    final leftX = startOffset.dx < endOffset.dx ? startOffset.dx : endOffset.dx;
-    final rightX =
-        startOffset.dx > endOffset.dx ? startOffset.dx : endOffset.dx;
 
     final onStartPoint = (position - startOffset).distance <= _markerRadius;
     final onEndPoint = (position - endOffset).distance <= _markerRadius;
@@ -202,17 +246,102 @@ class FibRetracementDrawing extends Drawing {
       return true;
     }
 
-    for (final level in _levels) {
-      final y = startOffset.dy + ((endOffset.dy - startOffset.dy) * level);
-      final onLine = position.dx >= leftX - 8 &&
-          position.dx <= rightX + 8 &&
-          (position.dy - y).abs() <= fibConfig.lineStyle.thickness + 6;
+    final tolerance = fibConfig.lineStyle.thickness + 6;
+
+    for (final level in _enabledLevels(fibConfig)) {
+      final y =
+          startOffset.dy + ((endOffset.dy - startOffset.dy) * level.value);
+      final onLine = position.dx >= _lineLeft - 8 &&
+          position.dx <= _lineRight + 8 &&
+          (position.dy - y).abs() <= tolerance;
       if (onLine) {
         return true;
       }
     }
 
+    if (fibConfig.showTrendLine &&
+        _distanceToSegment(position, startOffset, endOffset) <=
+            fibConfig.trendLineStyle.thickness + 6) {
+      return true;
+    }
+
     return false;
+  }
+
+  static List<FibLevel> _enabledLevels(
+          FibRetracementDrawingToolConfig config) =>
+      config.levels.where((level) => level.enabled).toList();
+
+  static Color _levelColor(
+          FibRetracementDrawingToolConfig config, FibLevel level) =>
+      config.useOneColor ? config.lineStyle.color : level.color;
+
+  static String _labelText(
+    FibRetracementDrawingToolConfig config,
+    FibLevel level,
+    double price,
+  ) {
+    final percent = _formatLevel(level.value);
+    if (config.labelMode == FibLabelMode.percentPrice) {
+      return '$percent (${_formatPrice(price)})';
+    }
+    return percent;
+  }
+
+  static String _formatPrice(double price) {
+    final magnitude = price.abs();
+    if (magnitude >= 1000) {
+      return price.toStringAsFixed(2);
+    }
+    if (magnitude == 0) {
+      return '0';
+    }
+    final digits = 5 - (math.log(magnitude) / math.ln10).floor() - 1;
+    return price.toStringAsFixed(digits.clamp(0, 8));
+  }
+
+  /// Draws a line from [a] to [b] with the given [pattern].
+  static void _paintStyledLine(
+    Canvas canvas,
+    Offset a,
+    Offset b,
+    Paint paint,
+    DrawingPatterns pattern,
+  ) {
+    if (pattern == DrawingPatterns.solid) {
+      canvas.drawLine(a, b, paint);
+      return;
+    }
+
+    final dashWidth = pattern == DrawingPatterns.dashed ? 6.0 : 1.5;
+    const dashSpace = 4.0;
+    final total = (b - a).distance;
+    if (total == 0) {
+      return;
+    }
+    final direction = (b - a) / total;
+
+    var travelled = 0.0;
+    while (travelled < total) {
+      final segmentEnd = math.min(travelled + dashWidth, total);
+      canvas.drawLine(
+        a + direction * travelled,
+        a + direction * segmentEnd,
+        paint,
+      );
+      travelled = segmentEnd + dashSpace;
+    }
+  }
+
+  static double _distanceToSegment(Offset p, Offset a, Offset b) {
+    final ab = b - a;
+    final lengthSquared = ab.dx * ab.dx + ab.dy * ab.dy;
+    if (lengthSquared == 0) {
+      return (p - a).distance;
+    }
+    final t = (((p - a).dx * ab.dx + (p - a).dy * ab.dy) / lengthSquared)
+        .clamp(0.0, 1.0);
+    return (p - (a + ab * t)).distance;
   }
 
   static DrawingParts _drawingPartFromJson(Object? value) {
