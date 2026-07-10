@@ -74,6 +74,7 @@ class Chart extends StatefulWidget {
     this.pipSize = 4,
     this.controller,
     this.overlayConfigs,
+    this.auxiliaryOverlaySeries,
     this.bottomConfigs = const <IndicatorConfig>[],
     this.markerSeries,
     this.theme,
@@ -113,6 +114,9 @@ class Chart extends StatefulWidget {
 
   /// List of overlay indicator series to add on chart beside the [mainSeries].
   final List<IndicatorConfig>? overlayConfigs;
+
+  /// Non-persistent caller-owned overlays rendered beside [mainSeries].
+  final List<Series>? auxiliaryOverlaySeries;
 
   /// List of bottom indicator series to add on chart separate from the
   /// [mainSeries].
@@ -572,6 +576,8 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
     final List<ChartData> chartDataList = <ChartData>[
       widget.mainSeries,
       if (overlaySeries != null) ...overlaySeries,
+      if (widget.auxiliaryOverlaySeries != null)
+        ...widget.auxiliaryOverlaySeries!,
       if (bottomSeries != null) ...bottomSeries,
       if (widget.annotations != null) ...widget.annotations!,
     ];
@@ -612,7 +618,12 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
             maxIntervalWidth: widget.maxIntervalWidth,
             dataFitPadding: widget.dataFitPadding,
             scrollAnimationDuration: currentTickAnimationDuration,
-            child: buildChartsLayout(context, overlaySeries, bottomSeries),
+            child: buildChartsLayout(
+              context,
+              overlaySeries,
+              bottomSeries,
+              widget.auxiliaryOverlaySeries,
+            ),
           ),
         ),
       ),
@@ -623,6 +634,7 @@ abstract class _ChartState extends State<Chart> with WidgetsBindingObserver {
     BuildContext context,
     List<Series>? overlaySeries,
     List<Series>? bottomSeries,
+    List<Series>? auxiliaryOverlaySeries,
   );
 
   void _onEdit(IndicatorConfig config) {

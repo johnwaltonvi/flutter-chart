@@ -6,6 +6,7 @@ class _ChartStateWeb extends _ChartState {
     BuildContext context,
     List<Series>? overlaySeries,
     List<Series>? bottomSeries,
+    List<Series>? auxiliaryOverlaySeries,
   ) {
     final Duration currentTickAnimationDuration =
         widget.currentTickAnimationDuration ?? _defaultDuration;
@@ -40,6 +41,11 @@ class _ChartStateWeb extends _ChartState {
       resolvedOverlaySeries = series;
     }
 
+    final List<Series> mainChartOverlaySeries = <Series>[
+      if (resolvedOverlaySeries != null) ...resolvedOverlaySeries,
+      if (auxiliaryOverlaySeries != null) ...auxiliaryOverlaySeries,
+    ];
+
     final renderableBottomConfigs = _getRenderableConfigs(
       widget.bottomConfigs,
       indicatorInput: indicatorInput,
@@ -55,7 +61,7 @@ class _ChartStateWeb extends _ChartState {
                 drawingTools: widget.drawingTools,
                 controller: _controller,
                 mainSeries: widget.mainSeries,
-                overlaySeries: resolvedOverlaySeries,
+                overlaySeries: mainChartOverlaySeries,
                 annotations: widget.annotations,
                 markerSeries: widget.markerSeries,
                 pipSize: widget.pipSize,

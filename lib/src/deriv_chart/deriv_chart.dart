@@ -9,6 +9,7 @@ import 'package:deriv_chart/src/add_ons/repository.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/chart.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/annotations/chart_annotation.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/chart_series/data_series.dart';
+import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/chart_series/series.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/markers/marker_series.dart';
 import 'package:deriv_chart/src/deriv_chart/chart/data_visualization/models/chart_object.dart';
 import 'package:deriv_chart/src/deriv_chart/drawing_tool_chart/drawing_tools.dart';
@@ -40,6 +41,7 @@ class DerivChart extends StatefulWidget {
     required this.activeSymbol,
     this.timeFormat = TimeFormat.twentyFourHour,
     this.markerSeries,
+    this.auxiliaryOverlaySeries,
     this.controller,
     this.onCrosshairAppeared,
     this.onCrosshairDisappeared,
@@ -83,6 +85,13 @@ class DerivChart extends StatefulWidget {
 
   /// Open position marker series.
   final MarkerSeries? markerSeries;
+
+  /// Non-persistent overlays rendered beside the main market series.
+  ///
+  /// These series contribute to chart bounds and painting, but do not become
+  /// indicators or replace [mainSeries] as the source of current-tick,
+  /// crosshair, and auto-follow behavior.
+  final List<Series>? auxiliaryOverlaySeries;
 
   /// Current active symbol.
   final String activeSymbol;
@@ -366,6 +375,7 @@ class _DerivChartState extends State<DerivChart> {
             children: <Widget>[
               Chart(
                 mainSeries: widget.mainSeries,
+                auxiliaryOverlaySeries: widget.auxiliaryOverlaySeries,
                 pipSize: widget.pipSize,
                 granularity: widget.granularity,
                 timeFormat: widget.timeFormat,

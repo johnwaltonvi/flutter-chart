@@ -25,8 +25,9 @@ class _ChartStateMobile extends _ChartState {
   @override
   Widget buildChartsLayout(
     BuildContext context,
-    List<Series>? overlaySeries,
+    List<Series>? indicatorOverlaySeries,
     List<Series>? bottomSeries,
+    List<Series>? auxiliaryOverlaySeries,
   ) {
     final Duration currentTickAnimationDuration =
         widget.currentTickAnimationDuration ?? _defaultDuration;
@@ -92,7 +93,10 @@ class _ChartStateMobile extends _ChartState {
                 );
         }).toList();
 
-    final List<Series> overlaySeries = <Series>[];
+    final List<Series> mainChartOverlaySeries = <Series>[
+      if (widget.indicatorsRepo == null && indicatorOverlaySeries != null)
+        ...indicatorOverlaySeries,
+    ];
 
     if (widget.indicatorsRepo != null) {
       for (int i = 0; i < widget.indicatorsRepo!.items.length; i++) {
@@ -103,8 +107,12 @@ class _ChartStateMobile extends _ChartState {
           continue;
         }
 
-        overlaySeries.add(config.getSeries(indicatorInput));
+        mainChartOverlaySeries.add(config.getSeries(indicatorInput));
       }
+    }
+
+    if (auxiliaryOverlaySeries != null) {
+      mainChartOverlaySeries.addAll(auxiliaryOverlaySeries);
     }
 
     return LayoutBuilder(builder: (
@@ -124,7 +132,7 @@ class _ChartStateMobile extends _ChartState {
                   drawingTools: widget.drawingTools,
                   controller: _controller,
                   mainSeries: widget.mainSeries,
-                  overlaySeries: overlaySeries,
+                  overlaySeries: mainChartOverlaySeries,
                   annotations: widget.annotations,
                   markerSeries: widget.markerSeries,
                   pipSize: widget.pipSize,
